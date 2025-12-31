@@ -1,0 +1,11 @@
+package dtos
+
+import "encoding/json"
+
+type RecordDto struct {
+	Name              string          `json:"name"`
+	IPFSCid           string          `json:"ipfs_cid"`             // Link to the ciphertext
+	DataToEncryptHash string          `json:"data_to_encrypt_hash"` // The Lit Fingerprint
+	PatientAddress    string          `json:"patient_address"`      // Owner
+	ACCJson           json.RawMessage `json:"acc_json"`             // The Stringified Rules
+}

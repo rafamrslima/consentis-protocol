@@ -12,7 +12,7 @@ CREATE TABLE users (
 
 -- 3. Create the Medical Records Table
 -- This stores the 'directions' for Lit Protocol and IPFS.
-CREATE TABLE medical_records (
+CREATE TABLE records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,               -- e.g., "MRI Scan - Dec 2025"
