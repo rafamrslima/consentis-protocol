@@ -1,0 +1,14 @@
+# Dockerfile
+FROM postgres:16-alpine
+
+# Set DB credentials and default DB
+ENV POSTGRES_USER=admin
+ENV POSTGRES_PASSWORD=mypassword
+ENV POSTGRES_DB=consentisdb
+
+COPY init.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 5432
+
+# docker build -t consentisdb .  
+# docker run -d --name consentisdb -p 5432:5432 consentisdb 
