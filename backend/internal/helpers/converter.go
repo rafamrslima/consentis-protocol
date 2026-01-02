@@ -5,7 +5,7 @@ import (
 	"consentis-api/internal/db/models"
 )
 
-func ConvertDtoToRecordModel(recordDto dtos.RecordDto) models.Record {
+func ConvertDtoToRecordModel(recordDto dtos.RecordCreationDto) models.Record {
 	return models.Record{
 		Name:              recordDto.Name,
 		IPFSCid:           recordDto.IPFSCid,

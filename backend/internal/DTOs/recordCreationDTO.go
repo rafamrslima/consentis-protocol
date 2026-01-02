@@ -2,7 +2,7 @@ package dtos
 
 import "encoding/json"
 
-type RecordDto struct {
+type RecordCreationDto struct {
 	Name              string          `json:"name"`
 	IPFSCid           string          `json:"ipfs_cid"`             // Link to the ciphertext
 	DataToEncryptHash string          `json:"data_to_encrypt_hash"` // The Lit Fingerprint
