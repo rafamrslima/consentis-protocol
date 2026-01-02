@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ValidateRecord(record dtos.RecordDto) error {
+func ValidateRecord(record dtos.RecordCreationDto) error {
 	if strings.TrimSpace(record.Name) == "" {
 		return errors.New("Name is required and cannot be empty")
 	}
