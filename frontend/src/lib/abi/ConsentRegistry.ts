@@ -1,0 +1,64 @@
+export const CONSENT_REGISTRY_ABI = [
+  {
+    type: "function",
+    name: "grantConsent",
+    inputs: [
+      { name: "researcher", type: "address", internalType: "address" },
+      { name: "recordId", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "revokeConsent",
+    inputs: [
+      { name: "researcher", type: "address", internalType: "address" },
+      { name: "recordId", type: "string", internalType: "string" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "hasConsent",
+    inputs: [
+      { name: "patient", type: "address", internalType: "address" },
+      { name: "researcher", type: "address", internalType: "address" },
+      { name: "recordId", type: "string", internalType: "string" },
+    ],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "checkAccess",
+    inputs: [
+      { name: "patient", type: "address", internalType: "address" },
+      { name: "researcher", type: "address", internalType: "address" },
+      { name: "recordId", type: "string", internalType: "string" },
+    ],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "ConsentGranted",
+    inputs: [
+      { name: "patient", type: "address", indexed: true, internalType: "address" },
+      { name: "researcher", type: "address", indexed: true, internalType: "address" },
+      { name: "recordId", type: "string", indexed: false, internalType: "string" },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ConsentRevoked",
+    inputs: [
+      { name: "patient", type: "address", indexed: true, internalType: "address" },
+      { name: "researcher", type: "address", indexed: true, internalType: "address" },
+      { name: "recordId", type: "string", indexed: false, internalType: "string" },
+    ],
+    anonymous: false,
+  },
+] as const;
