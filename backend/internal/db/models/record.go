@@ -7,7 +7,6 @@ import (
 
 type Record struct {
 	ID                string
-	PatientId         string
 	IPFSCid           string
 	DataToEncryptHash string
 	AccJson           json.RawMessage

@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 func StartRecordsController(mux *http.ServeMux) {
@@ -36,8 +34,7 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	record := helpers.ConvertDtoToRecordModel(recordDto)
-	record.PatientId = uuid.NewString()
-	if err := db.SaveRecord(record); err != nil {
+	if err := db.CreateRecord(record, recordDto.PatientAddress); err != nil {
 		http.Error(w, "Failed to add record", http.StatusInternalServerError)
 		log.Printf("Error inserting record: %v", err)
 		return
