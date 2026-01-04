@@ -1,5 +1,5 @@
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
-import { LIT_NETWORK, LitAbility } from "@lit-protocol/constants";
+import { LitAbility } from "@lit-protocol/constants";
 import {
   createSiweMessage,
   generateAuthSig,
@@ -10,9 +10,8 @@ import type {
   LitResourceAbilityRequest,
 } from "@lit-protocol/types";
 
-const LIT_NETWORK_NAME =
-  (process.env.NEXT_PUBLIC_LIT_NETWORK as keyof typeof LIT_NETWORK) ||
-  "datil-dev";
+const LIT_NETWORK_NAME = process.env.NEXT_PUBLIC_LIT_NETWORK || "datil-dev";
+// TODO: Replace with deployed ConsentRegistry contract address on Sepolia
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
 
 let litNodeClient: LitNodeClient | null = null;
@@ -23,7 +22,7 @@ export async function getLitClient(): Promise<LitNodeClient> {
   }
 
   litNodeClient = new LitNodeClient({
-    litNetwork: LIT_NETWORK[LIT_NETWORK_NAME],
+    litNetwork: LIT_NETWORK_NAME as "datil-dev" | "datil-test" | "datil",
     debug: false,
   });
 
