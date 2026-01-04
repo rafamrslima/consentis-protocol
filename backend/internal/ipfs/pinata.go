@@ -3,17 +3,48 @@ package pinata
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"math"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"sync"
 	"time"
 )
 
-type Client struct {
-	APIKey    string
-	APISecret string
-	HTTP      *http.Client
+const (
+	PinataBaseURL  = "https://api.pinata.cloud"
+	MaxFileSize    = 10 * 1024 * 1024 // 10MB
+	DefaultTimeout = 2 * time.Minute
+	MaxRetries     = 3
+)
+
+var (
+	clientInstance *Client
+	clientOnce     sync.Once
+	clientErr      error
+)
+
+func GetClient() (*Client, error) {
+	clientOnce.Do(func() {
+		apiKey := os.Getenv("PINATA_API_KEY")
+		apiSecret := os.Getenv("PINATA_API_SECRET")
+
+		if apiKey == "" || apiSecret == "" {
+			clientErr = errors.New("PINATA_API_KEY and PINATA_API_SECRET must be set")
+			return
+		}
+
+		clientInstance = NewClient(apiKey, apiSecret)
+	})
+
+	if clientErr != nil {
+		return nil, clientErr
+	}
+
+	return clientInstance, nil
 }
 
 func NewClient(apiKey, apiSecret string) *Client {
@@ -21,25 +52,60 @@ func NewClient(apiKey, apiSecret string) *Client {
 		APIKey:    apiKey,
 		APISecret: apiSecret,
 		HTTP: &http.Client{
-			Timeout: 1 * time.Minute,
+			Timeout: DefaultTimeout,
 		},
 	}
 }
 
-type PinataResponse struct {
-	IpfsHash  string `json:"IpfsHash"`
-	PinSize   int64  `json:"PinSize"`
-	TimeStamp string `json:"Timestamp"`
+func (c *Client) validate() error {
+	if c.APIKey == "" || c.APISecret == "" {
+		return errors.New("API key and secret are required")
+	}
+	return nil
 }
 
-// Optional metadata/options payloads
-type PinataMetadata struct {
-	Name      string            `json:"name,omitempty"`
-	Keyvalues map[string]string `json:"keyvalues,omitempty"`
+func (c *Client) doWithRetry(req *http.Request, maxRetries int) (*http.Response, error) {
+	var resp *http.Response
+	var err error
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		resp, err = c.HTTP.Do(req)
+		if err == nil && resp.StatusCode < 500 {
+			return resp, nil
+		}
+
+		if resp != nil {
+			resp.Body.Close()
+		}
+
+		if attempt < maxRetries {
+			backoffDuration := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+			time.Sleep(backoffDuration)
+		}
+	}
+
+	return resp, err
 }
 
-type PinataOptions struct {
-	CidVersion int `json:"cidVersion,omitempty"`
+func newLimitedReader(r io.Reader, maxSize int64) *LimitedReader {
+	return &LimitedReader{
+		Reader:    r,
+		remaining: maxSize,
+	}
+}
+
+func (lr *LimitedReader) Read(p []byte) (n int, err error) {
+	if lr.remaining <= 0 {
+		return 0, fmt.Errorf("file size exceeds limit of %d bytes", MaxFileSize)
+	}
+
+	if int64(len(p)) > lr.remaining {
+		p = p[:lr.remaining]
+	}
+
+	n, err = lr.Reader.Read(p)
+	lr.remaining -= int64(n)
+	return n, err
 }
 
 func (c *Client) StreamToPinata(
@@ -50,8 +116,13 @@ func (c *Client) StreamToPinata(
 	options *PinataOptions,
 ) (*PinataResponse, error) {
 
-	// Pinata endpoint for file uploads
-	const url = "https://api.pinata.cloud/pinning/pinFileToIPFS"
+	if err := c.validate(); err != nil {
+		return nil, fmt.Errorf("client validation failed: %w", err)
+	}
+
+	limitedReader := newLimitedReader(fileReader, MaxFileSize)
+
+	const url = PinataBaseURL + "/pinning/pinFileToIPFS"
 
 	// Pipe lets us write multipart data while http.Client reads it
 	pr, pw := io.Pipe()
@@ -68,7 +139,7 @@ func (c *Client) StreamToPinata(
 			_ = pw.CloseWithError(err)
 			return
 		}
-		if _, err := io.Copy(part, fileReader); err != nil {
+		if _, err := io.Copy(part, limitedReader); err != nil {
 			_ = pw.CloseWithError(err)
 			return
 		}
@@ -110,9 +181,9 @@ func (c *Client) StreamToPinata(
 	req.Header.Set("pinata_api_key", c.APIKey)
 	req.Header.Set("pinata_secret_api_key", c.APISecret)
 
-	resp, err := c.HTTP.Do(req)
+	resp, err := c.doWithRetry(req, MaxRetries)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request failed after %d retries: %w", MaxRetries, err)
 	}
 	defer resp.Body.Close()
 
