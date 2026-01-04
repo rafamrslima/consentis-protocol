@@ -44,12 +44,9 @@ docs/
 # Dependency directories (remove the comment below to include it)
 vendor/
 
-# Go workspace file
-go.work
-go.work.sum
-
-# Go modules
-go.sum
+# Go workspace file (workspace files should be ignored, but not go.mod/go.sum)
+backend/go.work
+backend/go.work.sum
 
 # IDE and editor files
 .vscode/
