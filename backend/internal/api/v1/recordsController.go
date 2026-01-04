@@ -4,9 +4,11 @@ import (
 	dtos "consentis-api/internal/DTOs"
 	"consentis-api/internal/db"
 	"consentis-api/internal/helpers"
+	pinata "consentis-api/internal/ipfs"
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 )
 
 func StartRecordsController(mux *http.ServeMux) {
@@ -20,11 +22,11 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var recordDto dtos.RecordCreationDto
-	if err := json.NewDecoder(r.Body).Decode(&recordDto); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		log.Printf("Error decoding request body: %v", err)
-		return
+	recordDto := dtos.RecordCreationDto{
+		PatientAddress:    r.FormValue("patient_address"),
+		Name:              r.FormValue("name"),
+		ACCJson:           json.RawMessage(r.FormValue("acc_json")),
+		DataToEncryptHash: r.FormValue("data_to_encrypt_hash"),
 	}
 
 	err := helpers.ValidateRecord(recordDto)
@@ -34,7 +36,41 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+	const maxUploadSize = 10 << 20 // 10 MB
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "Invalid multipart form", http.StatusBadRequest)
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "file is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	client := pinata.NewClient(os.Getenv("PINATA_API_KEY"), os.Getenv("PINATA_API_SECRET"))
+
+	res, err := client.StreamToPinata(ctx, file, fileHeader.Filename,
+		&pinata.PinataMetadata{
+			Name: recordDto.Name,
+			Keyvalues: map[string]string{
+				"patient": recordDto.PatientAddress,
+			},
+		},
+		&pinata.PinataOptions{CidVersion: 1},
+	)
+	if err != nil {
+		http.Error(w, "IPFS upload failed", http.StatusBadGateway)
+		return
+	}
+
 	record := helpers.ConvertDtoToRecordModel(recordDto)
+	record.IPFSCid = res.IpfsHash
+	log.Println("Record IPFS CID:", record.IPFSCid)
 	if err := db.CreateRecord(record, recordDto.PatientAddress); err != nil {
 		http.Error(w, "Failed to add record", http.StatusInternalServerError)
 		log.Printf("Error inserting record: %v", err)
@@ -42,7 +78,7 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Record added successfully"))
+	w.Write([]byte("Record added successfully, CID: " + record.IPFSCid))
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {

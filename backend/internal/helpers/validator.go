@@ -11,10 +11,6 @@ func ValidateRecord(record dtos.RecordCreationDto) error {
 		return errors.New("Name is required and cannot be empty")
 	}
 
-	if strings.TrimSpace(record.IPFSCid) == "" {
-		return errors.New("IPFSCid is required and cannot be empty")
-	}
-
 	if strings.TrimSpace(record.DataToEncryptHash) == "" {
 		return errors.New("DataToEncryptHash is required and cannot be empty")
 	}
