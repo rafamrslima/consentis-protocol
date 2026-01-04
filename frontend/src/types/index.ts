@@ -17,14 +17,6 @@ export interface Record {
   createdAt: Date;
 }
 
-export interface RecordDTO {
-  name: string;
-  ipfs_cid: string;
-  data_to_encrypt_hash: string;
-  patient_address: string;
-  acc_json: string;
-}
-
 export interface AccessControlConditions {
   contractAddress: string;
   chain: string;
