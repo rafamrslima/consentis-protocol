@@ -46,9 +46,7 @@ export function RecordUploadForm({
     try {
       const cid = await upload(file, recordName.trim(), patientAddress);
       onSuccess?.(cid);
-    } catch {
-      // Error is handled in the hook
-    }
+    } catch {}
   };
 
   const handleReset = () => {

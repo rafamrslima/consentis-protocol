@@ -41,10 +41,8 @@ export function useRecordUpload(): UseRecordUploadReturn {
     setError(null);
 
     try {
-      // Generate a unique record ID
       const recordId = `record_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-      // Step 1: Encrypt the file
       setStatus("encrypting");
       const { encryptedBlob, dataToEncryptHash } = await encryptFile(
         file,
@@ -52,10 +50,8 @@ export function useRecordUpload(): UseRecordUploadReturn {
         recordId
       );
 
-      // Step 2: Build access control conditions
       const accJson = buildAccessControlConditions(patientAddress, recordId);
 
-      // Step 3: Upload to backend
       setStatus("uploading");
       const result = await createRecord({
         name,
