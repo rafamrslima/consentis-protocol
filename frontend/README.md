@@ -5,12 +5,14 @@ Decentralized health data management frontend built with Next.js. Enables patien
 ## Core Features
 
 ### Patient
+
 - Connect wallet and register as patient
 - Upload medical records (encrypted with Lit Protocol)
 - Store encrypted files on IPFS
 - Grant/revoke researcher access via smart contract
 
 ### Researcher
+
 - Connect wallet and register as researcher
 - View records with granted access
 - Decrypt and download authorized records
@@ -27,6 +29,7 @@ Patients maintain full control while unlocking value from their health data:
 ## Data Flow
 
 ### Patient Upload Flow
+
 ```
 1. Patient connects wallet (RainbowKit)
 2. Patient uploads medical record file
@@ -38,6 +41,7 @@ Patients maintain full control while unlocking value from their health data:
 ```
 
 ### Researcher Decrypt Flow
+
 ```
 1. Researcher connects wallet
 2. Views list of records (granted access)
@@ -48,19 +52,20 @@ Patients maintain full control while unlocking value from their health data:
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Framework | Next.js 16 (App Router) |
-| Styling | Tailwind CSS + shadcn/ui |
-| Wallet | RainbowKit + wagmi + viem |
-| State | React Query + Zustand |
-| Encryption | Lit Protocol SDK |
-| Storage | IPFS (via Go backend) |
-| Blockchain | Sepolia Testnet |
+| Category   | Technology                |
+| ---------- | ------------------------- |
+| Framework  | Next.js 16 (App Router)   |
+| Styling    | Tailwind CSS + shadcn/ui  |
+| Wallet     | RainbowKit + wagmi + viem |
+| State      | React Query + Zustand     |
+| Encryption | Lit Protocol SDK          |
+| Storage    | IPFS (via Go backend)     |
+| Blockchain | Sepolia Testnet           |
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - MetaMask or compatible wallet
 - WalletConnect Project ID
@@ -168,13 +173,13 @@ Encryption uses ACC that checks the smart contract:
 
 The frontend calls these endpoints on the Go backend:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/records` | Create new record |
-| POST | `/api/v1/records/upload` | Upload encrypted blob to IPFS |
-| GET | `/api/v1/records/file/:cid` | Fetch encrypted file from IPFS |
-| GET | `/api/v1/records/patient/:address` | Get patient's records |
-| GET | `/api/v1/records/:id` | Get single record |
+| Method | Endpoint                           | Description                    |
+| ------ | ---------------------------------- | ------------------------------ |
+| POST   | `/api/v1/records`                  | Create new record              |
+| POST   | `/api/v1/records/upload`           | Upload encrypted blob to IPFS  |
+| GET    | `/api/v1/records/file/:cid`        | Fetch encrypted file from IPFS |
+| GET    | `/api/v1/records/patient/:address` | Get patient's records          |
+| GET    | `/api/v1/records/:id`              | Get single record              |
 
 > **Note:** All IPFS/Pinata operations go through the backend. Pinata credentials are never exposed to the frontend.
 
@@ -192,12 +197,28 @@ The frontend calls these endpoints on the Go backend:
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
+| Command                | Description                  |
+| ---------------------- | ---------------------------- |
+| `npm run dev`          | Start development server     |
+| `npm run build`        | Build for production         |
+| `npm run start`        | Start production server      |
+| `npm run lint`         | Run ESLint                   |
+| `npm run typecheck`    | Run TypeScript type checking |
+| `npm run format`       | Format code with Prettier    |
+| `npm run format:check` | Check code formatting        |
+
+## Pre-commit Hooks
+
+This project uses Husky and lint-staged for pre-commit hooks:
+
+- ESLint + Prettier for `.ts`, `.tsx` files
+- Prettier for `.json`, `.md`, `.css` files
+
+Hooks run automatically on `git commit`. To skip (not recommended):
+
+```bash
+git commit --no-verify
+```
 
 ## Notes
 

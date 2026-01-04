@@ -37,7 +37,7 @@ export default function ConnectPage() {
 
         {!isConnected ? (
           <div className="flex flex-col items-center space-y-6">
-            <p className="text-center text-muted-foreground">
+            <p className="text-muted-foreground text-center">
               Connect your wallet to get started
             </p>
             <ConnectButton />
@@ -47,7 +47,7 @@ export default function ConnectPage() {
         ) : (
           <div className="flex flex-col items-center space-y-4">
             <ConnectButton />
-            <p className="text-sm text-muted-foreground">Redirecting...</p>
+            <p className="text-muted-foreground text-sm">Redirecting...</p>
           </div>
         )}
       </div>
