@@ -1,8 +1,8 @@
-package db
+package repositories
 
 import (
-	dtos "consentis-api/internal/DTOs"
-	"consentis-api/internal/db/models"
+	"consentis-api/internal/dtos"
+	"consentis-api/internal/models"
 	"context"
 	"fmt"
 	"log"
@@ -75,7 +75,7 @@ func CreateRecord(record models.Record, patientAddress string) error {
 	return nil
 }
 
-func GetAllRecords() ([]dtos.RecordMetadataDto, error) {
+func GetAllRecords() ([]dtos.RecordMetadataResponse, error) {
 	pool, err := connect()
 	if err != nil {
 		return nil, err
@@ -92,9 +92,9 @@ func GetAllRecords() ([]dtos.RecordMetadataDto, error) {
 	}
 	defer rows.Close()
 
-	var recordsMetadata []dtos.RecordMetadataDto
+	var recordsMetadata []dtos.RecordMetadataResponse
 	for rows.Next() {
-		var recordMetadata dtos.RecordMetadataDto
+		var recordMetadata dtos.RecordMetadataResponse
 		if err := rows.Scan(&recordMetadata.Name, &recordMetadata.PatientAddress, &recordMetadata.CreatedAt); err != nil {
 			return nil, err
 		}

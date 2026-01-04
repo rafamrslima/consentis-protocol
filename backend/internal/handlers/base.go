@@ -1,4 +1,4 @@
-package v1
+package handlers
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func StartController() {
+func Start() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", homePage)
 
-	StartRecordsController(mux)
+	StartRecordsHandler(mux)
 
 	log.Println("Server starting on port 8080...")
 	log.Fatal(http.ListenAndServe(":8080", WithCORS(mux)))

@@ -1,16 +1,16 @@
-package v1
+package handlers
 
 import (
-	dtos "consentis-api/internal/DTOs"
-	"consentis-api/internal/db"
+	"consentis-api/internal/dtos"
 	"consentis-api/internal/helpers"
 	pinata "consentis-api/internal/ipfs"
+	"consentis-api/internal/repositories"
 	"encoding/json"
 	"log"
 	"net/http"
 )
 
-func StartRecordsController(mux *http.ServeMux) {
+func StartRecordsHandler(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/records", addRecord)
 	mux.HandleFunc("GET /api/v1/records", getRecords)
 	mux.HandleFunc("GET /api/v1/records/patient/{address}", getRecordsByOwnerAddress)
@@ -22,7 +22,7 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recordDto := dtos.RecordCreationDto{
+	recordDto := dtos.RecordCreateRequest{
 		PatientAddress:    r.FormValue("patient_address"),
 		Name:              r.FormValue("name"),
 		ACCJson:           json.RawMessage(r.FormValue("acc_json")),
@@ -75,7 +75,7 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	record := helpers.ConvertDtoToRecordModel(recordDto)
 	record.IPFSCid = res.IpfsHash
 	log.Println("Record IPFS CID:", record.IPFSCid)
-	if err := db.CreateRecord(record, recordDto.PatientAddress); err != nil {
+	if err := repositories.CreateRecord(record, recordDto.PatientAddress); err != nil {
 		http.Error(w, "Failed to add record", http.StatusInternalServerError)
 		log.Printf("Error inserting record: %v", err)
 		return
@@ -91,7 +91,7 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	records, err := db.GetAllRecords()
+	records, err := repositories.GetAllRecords()
 	if err != nil {
 		http.Error(w, "Failed to retrieve records", http.StatusInternalServerError)
 		log.Printf("Error retrieving records: %v", err)
@@ -129,7 +129,7 @@ func getRecordsByOwnerAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	records, err := db.GetRecordsByOwnerAddress(address)
+	records, err := repositories.GetRecordsByOwnerAddress(address)
 	if err != nil {
 		http.Error(w, "Failed to retrieve records", http.StatusInternalServerError)
 		log.Printf("Error retrieving records: %v", err)

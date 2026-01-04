@@ -1,11 +1,11 @@
 package helpers
 
 import (
-	dtos "consentis-api/internal/DTOs"
-	"consentis-api/internal/db/models"
+	dtos "consentis-api/internal/dtos"
+	"consentis-api/internal/models"
 )
 
-func ConvertDtoToRecordModel(recordDto dtos.RecordCreationDto) models.Record {
+func ConvertDtoToRecordModel(recordDto dtos.RecordCreateRequest) models.Record {
 	return models.Record{
 		Name:              recordDto.Name,
 		DataToEncryptHash: recordDto.DataToEncryptHash,
