@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func StartRecordsHandler(mux *http.ServeMux) {
@@ -17,11 +18,6 @@ func StartRecordsHandler(mux *http.ServeMux) {
 }
 
 func addRecord(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	recordDto := dtos.RecordCreateRequest{
 		PatientAddress:    r.FormValue("patient_address"),
 		Name:              r.FormValue("name"),
@@ -81,16 +77,12 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Record added successfully, CID: " + record.IPFSCid))
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	records, err := repositories.GetAllRecords()
 	if err != nil {
 		http.Error(w, "Failed to retrieve records", http.StatusInternalServerError)
@@ -99,7 +91,7 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(records) == 0 {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("[]"))
 		return
 	}
@@ -110,6 +102,7 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(data); err != nil {
 		log.Println("Error writing response:", err)
@@ -118,14 +111,14 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRecordsByOwnerAddress(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	address := r.PathValue("address")
 	if address == "" {
 		http.Error(w, "Address parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	if len(address) != 42 || !strings.HasPrefix(address, "0x") {
+		http.Error(w, "Invalid Ethereum address format", http.StatusBadRequest)
 		return
 	}
 
@@ -137,7 +130,7 @@ func getRecordsByOwnerAddress(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(records) == 0 {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("[]"))
 		return
 	}
@@ -148,6 +141,7 @@ func getRecordsByOwnerAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(data); err != nil {
 		log.Println("Error writing response:", err)
