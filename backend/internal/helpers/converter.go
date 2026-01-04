@@ -8,7 +8,6 @@ import (
 func ConvertDtoToRecordModel(recordDto dtos.RecordCreationDto) models.Record {
 	return models.Record{
 		Name:              recordDto.Name,
-		IPFSCid:           recordDto.IPFSCid,
 		DataToEncryptHash: recordDto.DataToEncryptHash,
 		AccJson:           recordDto.ACCJson,
 	}
