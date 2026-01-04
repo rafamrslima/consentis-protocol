@@ -17,6 +17,15 @@ Decentralized health data management frontend built with Next.js. Enables patien
 - View records with granted access
 - Decrypt and download authorized records
 
+## Why Would Patients Share?
+
+Patients maintain full control while unlocking value from their health data:
+
+- **Rewards System** (coming soon): Researchers compensate patients for data access
+- **Contribution to Research**: Help advance medical science on your own terms
+- **Granular Control**: Grant or revoke access to specific records at any time
+- **Transparency**: See exactly who accessed your data and when
+
 ## Data Flow
 
 ### Patient Upload Flow
@@ -25,11 +34,10 @@ Decentralized health data management frontend built with Next.js. Enables patien
 1. Patient connects wallet (RainbowKit)
 2. Patient uploads medical record file
 3. Frontend encrypts file using Lit SDK
-4. Frontend uploads encrypted file to IPFS → gets CID
-5. Frontend calls POST /api/v1/records with:
-   - name, ipfs_cid, data_to_encrypt_hash
-   - patient_address, acc_json
-6. Patient can grant/revoke access via smart contract
+4. Frontend sends encrypted blob to Go backend
+5. Backend pins to IPFS → returns CID
+6. Frontend calls POST /api/v1/records with metadata
+7. Patient can grant/revoke access via smart contract
 ```
 
 ### Researcher Decrypt Flow
@@ -37,7 +45,7 @@ Decentralized health data management frontend built with Next.js. Enables patien
 ```
 1. Researcher connects wallet
 2. Views list of records (granted access)
-3. Fetches encrypted file from IPFS
+3. Frontend fetches encrypted file via Go backend
 4. Lit Protocol checks smart contract access
 5. If granted: decrypts and displays file
 ```
@@ -51,7 +59,7 @@ Decentralized health data management frontend built with Next.js. Enables patien
 | Wallet     | RainbowKit + wagmi + viem |
 | State      | React Query + Zustand     |
 | Encryption | Lit Protocol SDK          |
-| Storage    | Pinata (IPFS)             |
+| Storage    | IPFS (via Go backend)     |
 | Blockchain | Sepolia Testnet           |
 
 ## Getting Started
@@ -60,8 +68,8 @@ Decentralized health data management frontend built with Next.js. Enables patien
 
 - Node.js 18+
 - MetaMask or compatible wallet
-- Pinata account (for IPFS)
 - WalletConnect Project ID
+- Go backend running (handles IPFS via Pinata)
 
 ### 1. Install dependencies
 
@@ -87,10 +95,6 @@ NEXT_PUBLIC_CONTRACT_ADDRESS=0x...
 
 # WalletConnect (https://cloud.walletconnect.com)
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
-
-# Pinata IPFS (https://pinata.cloud)
-NEXT_PUBLIC_PINATA_JWT=your_pinata_jwt
-NEXT_PUBLIC_PINATA_GATEWAY=your_gateway.mypinata.cloud
 
 # Backend API
 NEXT_PUBLIC_API_URL=http://localhost:8080
@@ -124,8 +128,7 @@ src/
 │   └── access/            # Access management
 ├── services/
 │   ├── lit.ts             # Lit Protocol encryption
-│   ├── pinata.ts          # IPFS upload/download
-│   └── api.ts             # Backend API calls
+│   └── api.ts             # Backend API calls (includes IPFS via backend)
 ├── hooks/                 # Custom React hooks
 ├── store/                 # Zustand stores
 ├── lib/
@@ -170,11 +173,15 @@ Encryption uses ACC that checks the smart contract:
 
 The frontend calls these endpoints on the Go backend:
 
-| Method | Endpoint                           | Description           |
-| ------ | ---------------------------------- | --------------------- |
-| POST   | `/api/v1/records`                  | Create new record     |
-| GET    | `/api/v1/records/patient/:address` | Get patient's records |
-| GET    | `/api/v1/records/:id`              | Get single record     |
+| Method | Endpoint                           | Description                    |
+| ------ | ---------------------------------- | ------------------------------ |
+| POST   | `/api/v1/records`                  | Create new record              |
+| POST   | `/api/v1/records/upload`           | Upload encrypted blob to IPFS  |
+| GET    | `/api/v1/records/file/:cid`        | Fetch encrypted file from IPFS |
+| GET    | `/api/v1/records/patient/:address` | Get patient's records          |
+| GET    | `/api/v1/records/:id`              | Get single record              |
+
+> **Note:** All IPFS/Pinata operations go through the backend. Pinata credentials are never exposed to the frontend.
 
 ### Record DTO
 

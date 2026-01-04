@@ -10,7 +10,7 @@ export default function ConnectPage() {
   const router = useRouter();
   const {
     isConnected,
-    isConnecting,
+    isLoading,
     isAuthenticated,
     needsRoleSelection,
     role,
@@ -37,17 +37,17 @@ export default function ConnectPage() {
 
         {!isConnected ? (
           <div className="flex flex-col items-center space-y-6">
-            <p className="text-center text-muted-foreground">
+            <p className="text-muted-foreground text-center">
               Connect your wallet to get started
             </p>
             <ConnectButton />
           </div>
         ) : needsRoleSelection ? (
-          <RoleSelector onSelect={selectRole} isLoading={isConnecting} />
+          <RoleSelector onSelect={selectRole} isLoading={isLoading} />
         ) : (
           <div className="flex flex-col items-center space-y-4">
             <ConnectButton />
-            <p className="text-sm text-muted-foreground">Redirecting...</p>
+            <p className="text-muted-foreground text-sm">Redirecting...</p>
           </div>
         )}
       </div>
