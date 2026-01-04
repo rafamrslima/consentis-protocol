@@ -102,3 +102,31 @@ func GetAllRecords() ([]dtos.RecordMetadataDto, error) {
 	}
 	return recordsMetadata, nil
 }
+
+func GetRecordsByOwnerAddress(address string) ([]dtos.RecordsByPatientResponse, error) {
+	pool, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	defer pool.Close()
+
+	ctx := context.Background()
+	rows, err := pool.Query(ctx,
+		`SELECT r.id, r.name, r.ipfs_cid, r.created_at FROM records r inner join users u on r.patient_id = u.id
+		where u.wallet_address = $1 order by r.created_at DESC`, address)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []dtos.RecordsByPatientResponse
+	for rows.Next() {
+		var record dtos.RecordsByPatientResponse
+		if err := rows.Scan(&record.Id, &record.Name, &record.IPFSCid, &record.CreatedAt); err != nil {
+			return nil, err
+		}
+		records = append(records, record)
+	}
+	return records, nil
+}

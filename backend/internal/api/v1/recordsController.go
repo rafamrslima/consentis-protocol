@@ -13,6 +13,7 @@ import (
 func StartRecordsController(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/records", addRecord)
 	mux.HandleFunc("GET /api/v1/records", getRecords)
+	mux.HandleFunc("GET /api/v1/records/patient/{address}", getRecordsByOwnerAddress)
 }
 
 func addRecord(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +95,50 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to retrieve records", http.StatusInternalServerError)
 		log.Printf("Error retrieving records: %v", err)
+		return
+	}
+
+	if len(records) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("[]"))
+		return
+	}
+
+	data, err := json.Marshal(records)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(data); err != nil {
+		log.Println("Error writing response:", err)
+		return
+	}
+}
+
+func getRecordsByOwnerAddress(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	address := r.PathValue("address")
+	if address == "" {
+		http.Error(w, "Address parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	records, err := db.GetRecordsByOwnerAddress(address)
+	if err != nil {
+		http.Error(w, "Failed to retrieve records", http.StatusInternalServerError)
+		log.Printf("Error retrieving records: %v", err)
+		return
+	}
+
+	if len(records) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("[]"))
 		return
 	}
 
