@@ -23,6 +23,9 @@ export function RecordUploadForm({
   const [recordName, setRecordName] = useState("");
   const { upload, status, error, reset } = useRecordUpload();
 
+  const isLoading = status === "encrypting" || status === "uploading";
+  const isDisabled = isLoading || status === "success";
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setFile(acceptedFiles[0]);
@@ -33,6 +36,7 @@ export function RecordUploadForm({
     onDrop,
     maxFiles: 1,
     maxSize: 10 * 1024 * 1024, // 10MB
+    disabled: isDisabled,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,8 +57,6 @@ export function RecordUploadForm({
     reset();
   };
 
-  const isLoading = status === "encrypting" || status === "uploading";
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
@@ -64,7 +66,7 @@ export function RecordUploadForm({
           placeholder="e.g., Blood Work - January 2026"
           value={recordName}
           onChange={(e) => setRecordName(e.target.value)}
-          disabled={isLoading}
+          disabled={isDisabled}
         />
       </div>
 
@@ -72,7 +74,7 @@ export function RecordUploadForm({
         <Label>File</Label>
         <div
           {...getRootProps()}
-          className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25"} ${isLoading ? "pointer-events-none opacity-50" : "hover:border-primary/50"} `}
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25"} ${isDisabled ? "pointer-events-none opacity-50" : "hover:border-primary/50"} `}
         >
           <input {...getInputProps()} />
           {file ? (

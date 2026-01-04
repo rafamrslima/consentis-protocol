@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { RecordUploadForm } from "@/components/records/RecordUploadForm";
 
+// TODO: Fetch and display patient records when GET /api/v1/records/patient/:address is implemented
 export default function RecordsPage() {
   const { address, role } = useAuth();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function RecordsPage() {
             <div className="flex items-center gap-4">
               <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="cursor-pointer">
                     <Plus className="mr-2 h-4 w-4" />
                     Upload Record
                   </Button>

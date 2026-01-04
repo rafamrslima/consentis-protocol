@@ -69,8 +69,8 @@ export function useRecordUpload(): UseRecordUploadReturn {
       return result.cid;
     } catch (err) {
       setStatus("error");
-      const message = err instanceof Error ? err.message : "Upload failed";
-      setError(message);
+      console.error("[useRecordUpload] Upload failed:", err);
+      setError("Upload failed. Please try again.");
       throw err;
     }
   };
