@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 )
 
 func StartRecordsController(mux *http.ServeMux) {
@@ -52,7 +51,11 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	client := pinata.NewClient(os.Getenv("PINATA_API_KEY"), os.Getenv("PINATA_API_SECRET"))
+	client, err := pinata.GetClient()
+	if err != nil {
+		http.Error(w, "Failed to initialize IPFS client", http.StatusInternalServerError)
+		return
+	}
 
 	res, err := client.StreamToPinata(ctx, file, fileHeader.Filename,
 		&pinata.PinataMetadata{
