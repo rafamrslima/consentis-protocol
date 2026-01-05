@@ -27,3 +27,35 @@ CREATE TABLE records (
         REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS consents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    record_id UUID NOT NULL REFERENCES records(id) ON DELETE CASCADE,
+    researcher_address VARCHAR(42) NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('granted', 'revoked', 'pending')) DEFAULT 'pending',
+    last_tx_hash VARCHAR(66),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT unique_researcher_record UNIQUE(record_id, researcher_address)
+);
+
+    -- Indexes for the Researcher Portal
+    -- This makes "Show me all records I have access to" near-instant
+    CREATE INDEX idx_consents_researcher ON consents(researcher_address);
+    CREATE INDEX idx_consents_status ON consents(status);
+
+    -- Trigger to auto-update the updated_at column
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $$ language 'plpgsql';
+
+    CREATE TRIGGER update_consents_updated_at
+        BEFORE UPDATE ON consents
+        FOR EACH ROW
+        EXECUTE PROCEDURE update_updated_at_column();
+

@@ -1,8 +1,8 @@
-package db
+package repositories
 
 import (
-	dtos "consentis-api/internal/DTOs"
-	"consentis-api/internal/db/models"
+	"consentis-api/internal/dtos"
+	"consentis-api/internal/models"
 	"context"
 	"fmt"
 	"log"
@@ -75,7 +75,7 @@ func CreateRecord(record models.Record, patientAddress string) error {
 	return nil
 }
 
-func GetAllRecords() ([]dtos.RecordMetadataDto, error) {
+func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentResponse, error) {
 	pool, err := connect()
 	if err != nil {
 		return nil, err
@@ -84,21 +84,63 @@ func GetAllRecords() ([]dtos.RecordMetadataDto, error) {
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
-		`SELECT name, u.wallet_address, r.created_at FROM records r
-		inner join users u on r.patient_id = u.id order by r.created_at DESC`)
+		`SELECT 
+			name, 
+			u.wallet_address, 
+			r.created_at,
+			CASE WHEN c.researcher_address IS NOT NULL THEN c.status ELSE '' END as consent_status,
+			CASE WHEN c.researcher_address IS NOT NULL THEN c.updated_at ELSE NULL END as last_updated
+		FROM records r
+		INNER JOIN users u on r.patient_id = u.id
+		LEFT JOIN consents c on r.id = c.record_id AND c.researcher_address = $1
+		order by r.created_at DESC`, researcherAddress)
 
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var recordsMetadata []dtos.RecordMetadataDto
+	var recordsMetadata []dtos.RecordMetadataWithConsentResponse
 	for rows.Next() {
-		var recordMetadata dtos.RecordMetadataDto
-		if err := rows.Scan(&recordMetadata.Name, &recordMetadata.PatientAddress, &recordMetadata.CreatedAt); err != nil {
+		var recordMetadata dtos.RecordMetadataWithConsentResponse
+		if err := rows.Scan(
+			&recordMetadata.Name,
+			&recordMetadata.PatientAddress,
+			&recordMetadata.CreatedAt,
+			&recordMetadata.ConsentStatus,
+			&recordMetadata.LastUpdatedConsent,
+		); err != nil {
 			return nil, err
 		}
 		recordsMetadata = append(recordsMetadata, recordMetadata)
 	}
 	return recordsMetadata, nil
+}
+
+func GetRecordsByOwnerAddress(address string) ([]dtos.RecordsByPatientResponse, error) {
+	pool, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	defer pool.Close()
+
+	ctx := context.Background()
+	rows, err := pool.Query(ctx,
+		`SELECT r.id, r.name, r.ipfs_cid, r.created_at FROM records r inner join users u on r.patient_id = u.id
+		where u.wallet_address = $1 order by r.created_at DESC`, address)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []dtos.RecordsByPatientResponse
+	for rows.Next() {
+		var record dtos.RecordsByPatientResponse
+		if err := rows.Scan(&record.Id, &record.Name, &record.IPFSCid, &record.CreatedAt); err != nil {
+			return nil, err
+		}
+		records = append(records, record)
+	}
+	return records, nil
 }

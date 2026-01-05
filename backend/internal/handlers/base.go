@@ -1,19 +1,46 @@
-package v1
+package handlers
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
-func StartController() {
+type Server struct {
+	httpServer *http.Server
+}
+
+func NewServer(addr string) *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", homePage)
 
-	StartRecordsController(mux)
+	StartRecordsHandler(mux)
 
-	log.Println("Server starting on port 8080...")
-	log.Fatal(http.ListenAndServe(":8080", WithCORS(mux)))
+	return &Server{
+		httpServer: &http.Server{
+			Addr:         addr,
+			Handler:      WithCORS(mux),
+			ReadTimeout:  15 * time.Second,
+			WriteTimeout: 15 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		},
+	}
+}
+
+func (s *Server) Start() error {
+	log.Printf("Server listening on %s", s.httpServer.Addr)
+
+	if err := s.httpServer.ListenAndServe(); err != http.ErrServerClosed {
+		return err
+	}
+	return nil
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	log.Println("Shutting down HTTP server...")
+	return s.httpServer.Shutdown(ctx)
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {

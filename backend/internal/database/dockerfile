@@ -11,4 +11,4 @@ COPY init.sql /docker-entrypoint-initdb.d/
 EXPOSE 5432
 
 # docker build -t consentisdb .  
-# docker run -d --name consentisdb -p 5432:5432 consentisdb 
+# docker run -d --name consentisdb -p 5433:5432 consentisdb 

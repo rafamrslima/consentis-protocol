@@ -1,12 +1,12 @@
 package helpers
 
 import (
-	dtos "consentis-api/internal/DTOs"
+	"consentis-api/internal/dtos"
 	"errors"
 	"strings"
 )
 
-func ValidateRecord(record dtos.RecordCreationDto) error {
+func ValidateRecord(record dtos.RecordCreateRequest) error {
 	if strings.TrimSpace(record.Name) == "" {
 		return errors.New("Name is required and cannot be empty")
 	}
