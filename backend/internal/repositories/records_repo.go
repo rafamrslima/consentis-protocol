@@ -75,7 +75,7 @@ func CreateRecord(record models.Record, patientAddress string) error {
 	return nil
 }
 
-func GetAllRecords() ([]dtos.RecordMetadataResponse, error) {
+func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentResponse, error) {
 	pool, err := connect()
 	if err != nil {
 		return nil, err
@@ -84,18 +84,32 @@ func GetAllRecords() ([]dtos.RecordMetadataResponse, error) {
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
-		`SELECT name, u.wallet_address, r.created_at FROM records r
-		inner join users u on r.patient_id = u.id order by r.created_at DESC`)
+		`SELECT 
+			name, 
+			u.wallet_address, 
+			r.created_at,
+			CASE WHEN c.researcher_address IS NOT NULL THEN c.status ELSE '' END as consent_status,
+			CASE WHEN c.researcher_address IS NOT NULL THEN c.updated_at ELSE NULL END as last_updated
+		FROM records r
+		INNER JOIN users u on r.patient_id = u.id
+		LEFT JOIN consents c on r.id = c.record_id AND c.researcher_address = $1
+		order by r.created_at DESC`, researcherAddress)
 
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var recordsMetadata []dtos.RecordMetadataResponse
+	var recordsMetadata []dtos.RecordMetadataWithConsentResponse
 	for rows.Next() {
-		var recordMetadata dtos.RecordMetadataResponse
-		if err := rows.Scan(&recordMetadata.Name, &recordMetadata.PatientAddress, &recordMetadata.CreatedAt); err != nil {
+		var recordMetadata dtos.RecordMetadataWithConsentResponse
+		if err := rows.Scan(
+			&recordMetadata.Name,
+			&recordMetadata.PatientAddress,
+			&recordMetadata.CreatedAt,
+			&recordMetadata.ConsentStatus,
+			&recordMetadata.LastUpdatedConsent,
+		); err != nil {
 			return nil, err
 		}
 		recordsMetadata = append(recordsMetadata, recordMetadata)

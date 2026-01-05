@@ -13,7 +13,7 @@ import (
 
 func StartRecordsHandler(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/records", addRecord)
-	mux.HandleFunc("GET /api/v1/records", getRecords)
+	mux.HandleFunc("GET /api/v1/records/researcher/{address}", getRecordsByResearcherAddress)
 	mux.HandleFunc("GET /api/v1/records/patient/{address}", getRecordsByOwnerAddress)
 }
 
@@ -85,8 +85,19 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getRecords(w http.ResponseWriter, r *http.Request) {
-	records, err := repositories.GetAllRecords()
+func getRecordsByResearcherAddress(w http.ResponseWriter, r *http.Request) {
+	address := r.PathValue("address")
+	if address == "" {
+		http.Error(w, "Address parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	if len(address) != 42 || !strings.HasPrefix(address, "0x") {
+		http.Error(w, "Invalid Ethereum address format", http.StatusBadRequest)
+		return
+	}
+
+	records, err := repositories.GetAllRecords(address)
 	if err != nil {
 		http.Error(w, "Failed to retrieve records", http.StatusInternalServerError)
 		log.Printf("Error retrieving records: %v", err)
