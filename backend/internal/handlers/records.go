@@ -79,7 +79,10 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Record added successfully, CID: " + record.IPFSCid))
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Record added successfully",
+		"cid":     record.IPFSCid,
+	})
 }
 
 func getRecords(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +94,7 @@ func getRecords(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(records) == 0 {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("[]"))
 		return
@@ -130,6 +134,7 @@ func getRecordsByOwnerAddress(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(records) == 0 {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("[]"))
 		return
