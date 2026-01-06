@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
+import { usePatientRecords } from "@/hooks/usePatientRecords";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,15 +16,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { RecordUploadForm } from "@/components/records/RecordUploadForm";
+import { RecordsList } from "@/components/records/RecordsList";
 
-// TODO: Fetch and display patient records when GET /api/v1/records/patient/:address is implemented
 export default function RecordsPage() {
-  const { address, role } = useAuth();
+  const { address } = useAuth();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [lastCid, setLastCid] = useState<string | null>(null);
+  const { records, isLoading, invalidateRecords } = usePatientRecords(address);
 
-  const handleUploadSuccess = (cid: string) => {
-    setLastCid(cid);
+  const handleUploadSuccess = () => {
+    invalidateRecords();
   };
 
   return (
@@ -66,27 +67,7 @@ export default function RecordsPage() {
             </div>
           </div>
 
-          {lastCid && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-              <p className="text-green-800">
-                Last uploaded CID:{" "}
-                <code className="rounded bg-green-100 px-2 py-1 text-sm">
-                  {lastCid}
-                </code>
-              </p>
-            </div>
-          )}
-
-          <div className="text-muted-foreground rounded-lg border p-8 text-center">
-            <p>
-              No records yet. Upload your first health record to get started.
-            </p>
-          </div>
-
-          <div className="text-muted-foreground text-sm">
-            <p>Connected: {address}</p>
-            <p>Role: {role}</p>
-          </div>
+          <RecordsList records={records} isLoading={isLoading} />
         </div>
       </div>
     </ProtectedRoute>

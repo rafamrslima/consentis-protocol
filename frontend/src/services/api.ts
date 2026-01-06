@@ -1,4 +1,4 @@
-import type { Record, AccessControlConditions } from "@/types";
+import type { Record, AccessControlConditions, PatientRecord } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -18,14 +18,6 @@ async function handleResponse<T>(response: Response): Promise<T> {
     throw new ApiError(response.status, message);
   }
   return response.json();
-}
-
-async function handleTextResponse(response: Response): Promise<string> {
-  if (!response.ok) {
-    const message = await response.text().catch(() => "Request failed");
-    throw new ApiError(response.status, message);
-  }
-  return response.text();
 }
 
 export interface CreateRecordRequest {
@@ -56,13 +48,7 @@ export async function createRecord(
     body: formData,
   });
 
-  const text = await handleTextResponse(response);
-
-  const cidMatch = text.match(/CID: (.+)$/);
-  return {
-    message: text,
-    cid: cidMatch ? cidMatch[1] : "",
-  };
+  return handleResponse<CreateRecordResponse>(response);
 }
 
 export async function getEncryptedFile(cid: string): Promise<Blob> {
@@ -78,12 +64,12 @@ export async function getEncryptedFile(cid: string): Promise<Blob> {
 
 export async function getPatientRecords(
   patientAddress: string
-): Promise<Record[]> {
+): Promise<PatientRecord[]> {
   const response = await fetch(
     `${API_URL}/api/v1/records/patient/${patientAddress}`
   );
 
-  return handleResponse<Record[]>(response);
+  return handleResponse<PatientRecord[]>(response);
 }
 
 export async function getRecord(id: string): Promise<Record> {
