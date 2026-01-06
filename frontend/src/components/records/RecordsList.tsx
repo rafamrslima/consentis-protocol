@@ -1,6 +1,7 @@
 "use client";
 
-import { FileText, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { FileText, ExternalLink, Shield } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -9,7 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ManageAccessDialog } from "@/components/access/ManageAccessDialog";
 import type { PatientRecord } from "@/types";
 
 interface RecordsListProps {
@@ -42,6 +45,7 @@ function RecordsListSkeleton() {
             <TableHead>Name</TableHead>
             <TableHead>IPFS CID</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead className="w-32">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -58,6 +62,9 @@ function RecordsListSkeleton() {
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-36" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-8 w-24" />
               </TableCell>
             </TableRow>
           ))}
@@ -77,6 +84,10 @@ function EmptyState() {
 }
 
 export function RecordsList({ records, isLoading }: RecordsListProps) {
+  const [selectedRecord, setSelectedRecord] = useState<PatientRecord | null>(
+    null
+  );
+
   if (isLoading) {
     return <RecordsListSkeleton />;
   }
@@ -86,41 +97,61 @@ export function RecordsList({ records, isLoading }: RecordsListProps) {
   }
 
   return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12"></TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>IPFS CID</TableHead>
-            <TableHead>Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {records.map((record) => (
-            <TableRow key={record.id}>
-              <TableCell>
-                <FileText className="text-muted-foreground h-5 w-5" />
-              </TableCell>
-              <TableCell className="font-medium">{record.name}</TableCell>
-              <TableCell>
-                <a
-                  href={`https://gateway.pinata.cloud/ipfs/${record.ipfs_cid}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-sm transition-colors"
-                >
-                  {truncateCid(record.ipfs_cid)}
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDate(record.created_at)}
-              </TableCell>
+    <>
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12"></TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>IPFS CID</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="w-32">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {records.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell>
+                  <FileText className="text-muted-foreground h-5 w-5" />
+                </TableCell>
+                <TableCell className="font-medium">{record.name}</TableCell>
+                <TableCell>
+                  <a
+                    href={`https://gateway.pinata.cloud/ipfs/${record.ipfs_cid}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-sm transition-colors"
+                  >
+                    {truncateCid(record.ipfs_cid)}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDate(record.created_at)}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedRecord(record)}
+                  >
+                    <Shield className="mr-1 h-4 w-4" />
+                    Access
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <ManageAccessDialog
+        open={!!selectedRecord}
+        onOpenChange={(open) => !open && setSelectedRecord(null)}
+        recordId={selectedRecord?.id ?? ""}
+        recordName={selectedRecord?.name ?? ""}
+      />
+    </>
   );
 }
