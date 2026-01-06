@@ -23,9 +23,7 @@ const consentRevoked = "ConsentRevoked"
 
 func startWebSocketConnection(ctx context.Context) *ethclient.Client {
 	ethClientAddress, err := getEthClientAddress()
-	wsURL := "ws:" + ethClientAddress
-
-	wsClient, err := ethclient.DialContext(ctx, wsURL)
+	wsClient, err := ethclient.DialContext(ctx, ethClientAddress)
 	if err != nil {
 		log.Fatal("websocket dial:", err)
 	}
