@@ -6,11 +6,10 @@ import (
 )
 
 func SaveUser(walletAddress string, role string) error {
-	pool, err := ConnectToDatabase()
+	pool, err := GetDB()
 	if err != nil {
 		return err
 	}
-	defer pool.Close()
 
 	ctx := context.Background()
 

@@ -8,13 +8,11 @@ import (
 )
 
 func CreateRecord(record models.Record, patientAddress string) error {
-	pool, err := ConnectToDatabase()
+	pool, err := GetDB()
 	if err != nil {
 		return err
 	}
-	defer pool.Close()
 	ctx := context.Background()
-
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -54,11 +52,10 @@ func CreateRecord(record models.Record, patientAddress string) error {
 }
 
 func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentResponse, error) {
-	pool, err := ConnectToDatabase()
+	pool, err := GetDB()
 	if err != nil {
 		return nil, err
 	}
-	defer pool.Close()
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
@@ -104,11 +101,10 @@ func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentRe
 }
 
 func GetRecordsByOwnerAddress(address string) ([]dtos.RecordsByPatientResponse, error) {
-	pool, err := ConnectToDatabase()
+	pool, err := GetDB()
 	if err != nil {
 		return nil, err
 	}
-	defer pool.Close()
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
