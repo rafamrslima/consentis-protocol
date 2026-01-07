@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, ExternalLink, Shield } from "lucide-react";
+import { FileText, Shield, Download, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageAccessDialog } from "@/components/access/ManageAccessDialog";
+import { useDecrypt } from "@/hooks/useDecrypt";
 import type { PatientRecord } from "@/types";
 
 interface RecordsListProps {
@@ -30,11 +31,6 @@ function formatDate(dateString: string): string {
   });
 }
 
-function truncateCid(cid: string): string {
-  if (cid.length <= 16) return cid;
-  return `${cid.slice(0, 8)}...${cid.slice(-8)}`;
-}
-
 function RecordsListSkeleton() {
   return (
     <div className="rounded-lg border">
@@ -43,9 +39,8 @@ function RecordsListSkeleton() {
           <TableRow>
             <TableHead className="w-12"></TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>IPFS CID</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead className="w-32">Actions</TableHead>
+            <TableHead className="w-48">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -58,13 +53,10 @@ function RecordsListSkeleton() {
                 <Skeleton className="h-4 w-48" />
               </TableCell>
               <TableCell>
-                <Skeleton className="h-4 w-32" />
-              </TableCell>
-              <TableCell>
                 <Skeleton className="h-4 w-36" />
               </TableCell>
               <TableCell>
-                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-32" />
               </TableCell>
             </TableRow>
           ))}
@@ -87,6 +79,27 @@ export function RecordsList({ records, isLoading }: RecordsListProps) {
   const [selectedRecord, setSelectedRecord] = useState<PatientRecord | null>(
     null
   );
+  const [decryptingId, setDecryptingId] = useState<string | null>(null);
+  const { decrypt, status } = useDecrypt();
+
+  const handleDownload = async (record: PatientRecord) => {
+    try {
+      setDecryptingId(record.id);
+      const file = await decrypt(record);
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = record.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed:", err);
+    } finally {
+      setDecryptingId(null);
+    }
+  };
 
   if (isLoading) {
     return <RecordsListSkeleton />;
@@ -104,9 +117,8 @@ export function RecordsList({ records, isLoading }: RecordsListProps) {
             <TableRow>
               <TableHead className="w-12"></TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>IPFS CID</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead className="w-32">Actions</TableHead>
+              <TableHead className="w-48">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -116,29 +128,37 @@ export function RecordsList({ records, isLoading }: RecordsListProps) {
                   <FileText className="text-muted-foreground h-5 w-5" />
                 </TableCell>
                 <TableCell className="font-medium">{record.name}</TableCell>
-                <TableCell>
-                  <a
-                    href={`https://gateway.pinata.cloud/ipfs/${record.ipfs_cid}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-sm transition-colors"
-                  >
-                    {truncateCid(record.ipfs_cid)}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatDate(record.created_at)}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedRecord(record)}
-                  >
-                    <Shield className="mr-1 h-4 w-4" />
-                    Access
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(record)}
+                      disabled={decryptingId === record.id}
+                    >
+                      {decryptingId === record.id ? (
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="mr-1 h-4 w-4" />
+                      )}
+                      {decryptingId === record.id
+                        ? status === "fetching"
+                          ? "Fetching..."
+                          : "Decrypting..."
+                        : "View"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedRecord(record)}
+                    >
+                      <Shield className="mr-1 h-4 w-4" />
+                      Access
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
