@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import {
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useReadContract, useWriteContract } from "wagmi";
 import {
   CONSENT_REGISTRY_ABI,
   CONSENT_REGISTRY_ADDRESS,
@@ -16,21 +12,10 @@ export function useConsentRegistry() {
     writeContract,
     data: hash,
     isPending,
+    isSuccess: isConfirmed,
     error,
     reset,
   } = useWriteContract();
-
-  const {
-    isLoading: isConfirming,
-    isSuccess: isConfirmed,
-    isError: isReceiptError,
-  } = useWaitForTransactionReceipt({
-    hash,
-    confirmations: 1,
-    query: {
-      refetchInterval: 2000,
-    },
-  });
 
   const grantConsent = useCallback(
     (researcherAddress: `0x${string}`, recordId: string) => {
@@ -60,9 +45,7 @@ export function useConsentRegistry() {
     grantConsent,
     revokeConsent,
     isPending,
-    isConfirming,
     isConfirmed,
-    isReceiptError,
     error,
     hash,
     reset,
