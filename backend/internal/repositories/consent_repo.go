@@ -7,7 +7,7 @@ import (
 )
 
 func SaveConsent(consent models.Consent, txHash string) error {
-	pool, err := connect()
+	pool, err := ConnectToDatabase()
 	if err != nil {
 		return err
 	}
