@@ -17,6 +17,13 @@ export interface Record {
   createdAt: Date;
 }
 
+export interface PatientRecord {
+  id: string;
+  name: string;
+  ipfs_cid: string;
+  created_at: string;
+}
+
 export interface AccessControlConditions {
   contractAddress: string;
   chain: string;
