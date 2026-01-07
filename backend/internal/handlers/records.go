@@ -11,6 +11,11 @@ import (
 	"strings"
 )
 
+// TODO: Implement soft delete for records
+// - Add DELETE /api/v1/records/{id} endpoint
+// - Add deleted_at column to records table
+// - Filter out deleted records in queries
+// - Optional: auto-revoke all consents on delete
 func StartRecordsHandler(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/records", addRecord)
 	mux.HandleFunc("GET /api/v1/records/researcher/{address}", getRecordsByResearcherAddress)

@@ -1,6 +1,14 @@
-import type { Record, AccessControlConditions, PatientRecord } from "@/types";
+import type {
+  AccessControlConditions,
+  PatientRecord,
+  ResearcherRecord,
+  Record,
+} from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const PINATA_GATEWAY =
+  process.env.NEXT_PUBLIC_PINATA_GATEWAY ||
+  "https://orange-managerial-butterfly-780.mypinata.cloud/ipfs";
 
 class ApiError extends Error {
   constructor(
@@ -52,7 +60,7 @@ export async function createRecord(
 }
 
 export async function getEncryptedFile(cid: string): Promise<Blob> {
-  const response = await fetch(`${API_URL}/api/v1/records/file/${cid}`);
+  const response = await fetch(`${PINATA_GATEWAY}/${cid}`);
 
   if (!response.ok) {
     const message = await response.text().catch(() => "Failed to fetch file");
@@ -80,10 +88,10 @@ export async function getRecord(id: string): Promise<Record> {
 
 export async function getResearcherRecords(
   researcherAddress: string
-): Promise<Record[]> {
+): Promise<ResearcherRecord[]> {
   const response = await fetch(
     `${API_URL}/api/v1/records/researcher/${researcherAddress}`
   );
 
-  return handleResponse<Record[]>(response);
+  return handleResponse<ResearcherRecord[]>(response);
 }

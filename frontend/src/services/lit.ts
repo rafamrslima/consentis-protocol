@@ -6,7 +6,7 @@ import {
   LitAccessControlConditionResource,
 } from "@lit-protocol/auth-helpers";
 import type {
-  AccessControlConditions,
+  EvmContractConditions,
   LitResourceAbilityRequest,
 } from "@lit-protocol/types";
 
@@ -37,18 +37,29 @@ export async function disconnectLit(): Promise<void> {
   }
 }
 
-export function buildAccessControlConditions(
+export function buildEvmContractConditions(
   patientAddress: string,
   recordId: string
-): AccessControlConditions {
+): EvmContractConditions {
   return [
     {
       contractAddress: CONTRACT_ADDRESS,
-      standardContractType: "",
       chain: "sepolia",
-      method: "hasConsent",
-      parameters: [":userAddress", recordId, patientAddress],
+      functionName: "checkAccess",
+      functionParams: [patientAddress, ":userAddress", recordId],
+      functionAbi: {
+        name: "checkAccess",
+        inputs: [
+          { name: "patient", type: "address" },
+          { name: "researcher", type: "address" },
+          { name: "recordId", type: "string" },
+        ],
+        outputs: [{ name: "", type: "bool" }],
+        stateMutability: "view",
+        type: "function",
+      },
       returnValueTest: {
+        key: "",
         comparator: "=",
         value: "true",
       },
@@ -65,9 +76,14 @@ export async function encryptFile(
   file: File,
   patientAddress: string,
   recordId: string
-): Promise<{ encryptedBlob: Blob } & EncryptResult> {
+): Promise<
+  {
+    encryptedBlob: Blob;
+    evmContractConditions: EvmContractConditions;
+  } & EncryptResult
+> {
   const client = await getLitClient();
-  const accessControlConditions = buildAccessControlConditions(
+  const evmContractConditions = buildEvmContractConditions(
     patientAddress,
     recordId
   );
@@ -76,7 +92,7 @@ export async function encryptFile(
   const fileData = new Uint8Array(arrayBuffer);
 
   const { ciphertext, dataToEncryptHash } = await client.encrypt({
-    accessControlConditions,
+    evmContractConditions,
     dataToEncrypt: fileData,
   });
 
@@ -86,6 +102,7 @@ export async function encryptFile(
 
   return {
     encryptedBlob,
+    evmContractConditions,
     ciphertext,
     dataToEncryptHash,
   };
@@ -153,23 +170,18 @@ export async function getSessionSignatures(
 export async function decryptFile(
   ciphertext: string,
   dataToEncryptHash: string,
-  patientAddress: string,
-  recordId: string,
+  evmContractConditions: EvmContractConditions,
   walletClient: {
     account: { address: string };
     signMessage: (args: { message: string }) => Promise<string>;
   }
 ): Promise<Uint8Array> {
   const client = await getLitClient();
-  const accessControlConditions = buildAccessControlConditions(
-    patientAddress,
-    recordId
-  );
 
   const sessionSigs = await getSessionSignatures(walletClient);
 
   const { decryptedData } = await client.decrypt({
-    accessControlConditions,
+    evmContractConditions,
     ciphertext,
     dataToEncryptHash,
     chain: "sepolia",

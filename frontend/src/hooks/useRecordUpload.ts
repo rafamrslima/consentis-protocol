@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useWalletClient } from "wagmi";
-import { encryptFile, buildAccessControlConditions } from "@/services/lit";
+import { encryptFile } from "@/services/lit";
 import { createRecord } from "@/services/api";
 
 export type UploadStatus =
@@ -44,24 +44,18 @@ export function useRecordUpload(): UseRecordUploadReturn {
       // Generate a unique record ID
       const recordId = `record_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-      // Step 1: Encrypt the file
+      // Step 1: Encrypt the file (returns evmContractConditions used for encryption)
       setStatus("encrypting");
-      const { encryptedBlob, dataToEncryptHash } = await encryptFile(
-        file,
-        patientAddress,
-        recordId
-      );
+      const { encryptedBlob, dataToEncryptHash, evmContractConditions } =
+        await encryptFile(file, patientAddress, recordId);
 
-      // Step 2: Build access control conditions
-      const accJson = buildAccessControlConditions(patientAddress, recordId);
-
-      // Step 3: Upload to backend
+      // Step 2: Upload to backend with the same conditions used for encryption
       setStatus("uploading");
       const result = await createRecord({
         name,
         patientAddress,
         dataToEncryptHash,
-        accJson,
+        accJson: evmContractConditions,
         encryptedFile: encryptedBlob,
       });
 
