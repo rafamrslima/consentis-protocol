@@ -84,16 +84,20 @@ func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentRe
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
-		`SELECT 
-			name, 
-			u.wallet_address, 
+		`SELECT
+			r.id,
+			r.name,
+			r.ipfs_cid,
+			r.data_to_encrypt_hash,
+			r.acc_json,
+			u.wallet_address,
 			r.created_at,
 			CASE WHEN c.researcher_address IS NOT NULL THEN c.status ELSE '' END as consent_status,
 			CASE WHEN c.researcher_address IS NOT NULL THEN c.updated_at ELSE NULL END as last_updated
 		FROM records r
-		INNER JOIN users u on r.patient_id = u.id
-		LEFT JOIN consents c on r.id = c.record_id AND c.researcher_address = $1
-		order by r.created_at DESC`, researcherAddress)
+		INNER JOIN users u ON r.patient_id = u.id
+		LEFT JOIN consents c ON r.id = c.record_id AND c.researcher_address = $1
+		ORDER BY r.created_at DESC`, researcherAddress)
 
 	if err != nil {
 		return nil, err
@@ -104,7 +108,11 @@ func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentRe
 	for rows.Next() {
 		var recordMetadata dtos.RecordMetadataWithConsentResponse
 		if err := rows.Scan(
+			&recordMetadata.Id,
 			&recordMetadata.Name,
+			&recordMetadata.IPFSCid,
+			&recordMetadata.DataToEncryptHash,
+			&recordMetadata.AccJson,
 			&recordMetadata.PatientAddress,
 			&recordMetadata.CreatedAt,
 			&recordMetadata.ConsentStatus,
@@ -126,8 +134,11 @@ func GetRecordsByOwnerAddress(address string) ([]dtos.RecordsByPatientResponse, 
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
-		`SELECT r.id, r.name, r.ipfs_cid, r.created_at FROM records r inner join users u on r.patient_id = u.id
-		where u.wallet_address = $1 order by r.created_at DESC`, address)
+		`SELECT r.id, r.name, r.ipfs_cid, r.data_to_encrypt_hash, r.acc_json, u.wallet_address, r.created_at
+		FROM records r
+		INNER JOIN users u ON r.patient_id = u.id
+		WHERE u.wallet_address = $1
+		ORDER BY r.created_at DESC`, address)
 
 	if err != nil {
 		return nil, err
@@ -137,7 +148,15 @@ func GetRecordsByOwnerAddress(address string) ([]dtos.RecordsByPatientResponse, 
 	var records []dtos.RecordsByPatientResponse
 	for rows.Next() {
 		var record dtos.RecordsByPatientResponse
-		if err := rows.Scan(&record.Id, &record.Name, &record.IPFSCid, &record.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&record.Id,
+			&record.Name,
+			&record.IPFSCid,
+			&record.DataToEncryptHash,
+			&record.AccJson,
+			&record.PatientAddress,
+			&record.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		records = append(records, record)
