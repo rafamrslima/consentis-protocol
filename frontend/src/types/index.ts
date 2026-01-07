@@ -21,7 +21,22 @@ export interface PatientRecord {
   id: string;
   name: string;
   ipfs_cid: string;
+  data_to_encrypt_hash: string;
+  acc_json: AccessControlConditions[];
+  patient_address: string;
   created_at: string;
+}
+
+export interface ResearcherRecord {
+  id: string;
+  name: string;
+  ipfs_cid: string;
+  data_to_encrypt_hash: string;
+  acc_json: AccessControlConditions[];
+  patient_address: string;
+  created_at: string;
+  consent_status: string;
+  last_updated_consent: string | null;
 }
 
 export interface AccessControlConditions {
