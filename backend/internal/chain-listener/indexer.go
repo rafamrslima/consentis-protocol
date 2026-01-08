@@ -145,12 +145,6 @@ func SaveConsent(parsedABI abi.ABI, lg types.Log, eventName string) {
 		lg.TxHash.Hex(),
 		lg.BlockNumber,
 	)
-
-	err = repositories.SaveUser(researcher.String(), "researcher")
-	if err != nil {
-		log.Println(err)
-		return
-	}
 }
 
 func getContractAddress() (string, error) {
