@@ -17,6 +17,7 @@ func NewServer(addr string) *Server {
 	mux.HandleFunc("/", homePage)
 
 	StartRecordsHandler(mux)
+	StartUsersHandler(mux)
 
 	return &Server{
 		httpServer: &http.Server{
