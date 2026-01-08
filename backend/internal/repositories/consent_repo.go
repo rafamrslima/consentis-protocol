@@ -7,11 +7,10 @@ import (
 )
 
 func SaveConsent(consent models.Consent, txHash string) error {
-	pool, err := connect()
+	pool, err := GetDB()
 	if err != nil {
 		return err
 	}
-	defer pool.Close()
 
 	ctx := context.Background()
 

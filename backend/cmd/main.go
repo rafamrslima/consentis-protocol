@@ -3,6 +3,7 @@ package main
 import (
 	chainlistener "consentis-api/internal/chain-listener"
 	"consentis-api/internal/handlers"
+	"consentis-api/internal/repositories"
 	"context"
 	"log"
 	"os"
@@ -51,6 +52,7 @@ func main() {
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Printf("HTTP server shutdown error: %v", err)
 	}
+	repositories.CloseDB()
 
 	log.Println("Application stopped gracefully")
 }

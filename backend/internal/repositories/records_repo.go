@@ -4,39 +4,15 @@ import (
 	"consentis-api/internal/dtos"
 	"consentis-api/internal/models"
 	"context"
-	"fmt"
 	"log"
-	"os"
-	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func connect() (*pgxpool.Pool, error) {
-	connString := os.Getenv("DATABASE_CONNECTION_STRING")
-	config, err := pgxpool.ParseConfig(connString)
-	if err != nil {
-		return nil, err
-	}
-	config.MaxConns = 20
-	config.MinConns = 2
-	config.MaxConnLifetime = time.Hour
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
-	if err != nil {
-		fmt.Println("Error to connect to database.", err)
-		return nil, err
-	}
-	return pool, nil
-}
-
 func CreateRecord(record models.Record, patientAddress string) error {
-	pool, err := connect()
+	pool, err := GetDB()
 	if err != nil {
 		return err
 	}
-	defer pool.Close()
 	ctx := context.Background()
-
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -76,11 +52,10 @@ func CreateRecord(record models.Record, patientAddress string) error {
 }
 
 func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentResponse, error) {
-	pool, err := connect()
+	pool, err := GetDB()
 	if err != nil {
 		return nil, err
 	}
-	defer pool.Close()
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,
@@ -126,11 +101,10 @@ func GetAllRecords(researcherAddress string) ([]dtos.RecordMetadataWithConsentRe
 }
 
 func GetRecordsByOwnerAddress(address string) ([]dtos.RecordsByPatientResponse, error) {
-	pool, err := connect()
+	pool, err := GetDB()
 	if err != nil {
 		return nil, err
 	}
-	defer pool.Close()
 
 	ctx := context.Background()
 	rows, err := pool.Query(ctx,

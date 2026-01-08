@@ -40,6 +40,21 @@ CREATE TABLE IF NOT EXISTS consents (
     CONSTRAINT unique_researcher_record UNIQUE(record_id, researcher_address)
 );
 
+-- 2. Create a specific table for Researcher Metadata
+CREATE TABLE researcher_profiles (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    full_name VARCHAR(100) NOT NULL,
+    institution VARCHAR(150) NOT NULL,
+    department VARCHAR(100),
+    professional_email VARCHAR(255) UNIQUE NOT NULL,
+    credentials_url TEXT, -- Link to a PDF/Image of their ID on IPFS/S3
+    bio TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for fast lookup by email or institution
+    CREATE INDEX idx_researcher_institution ON researcher_profiles(institution);
+
     -- Indexes for the Researcher Portal
     -- This makes "Show me all records I have access to" near-instant
     CREATE INDEX idx_consents_researcher ON consents(researcher_address);
