@@ -4,39 +4,47 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <section className="bg-background relative min-h-screen w-full overflow-hidden">
-      <div className="relative z-10 container mx-auto flex flex-col items-center px-6 pt-24 text-center md:pt-32">
-        <span className="bg-secondary/50 border-border text-primary mb-6 inline-block rounded-full border px-3 py-1 text-sm font-medium">
-          EARN TOKENS &bull; ADVANCE RESEARCH &bull; STAY IN CONTROL
-        </span>
+    <section
+      className="bg-background relative min-h-screen w-full overflow-hidden bg-contain bg-left bg-no-repeat"
+      style={{ backgroundImage: "url('/bg-left.png')" }}
+    >
+      <div className="relative z-10 container mx-auto flex min-h-screen max-w-6xl items-center px-6">
+        <div className="grid w-full grid-cols-1 items-center gap-12 md:grid-cols-2">
+          <div className="text-left">
+            <span className="bg-secondary/50 border-border text-primary mb-6 inline-block rounded-full border px-3 py-1 text-sm font-medium">
+              EARN TOKENS &bull; ADVANCE RESEARCH &bull; STAY IN CONTROL
+            </span>
 
-        <h1 className="text-foreground mb-6 text-5xl font-bold tracking-tight md:text-7xl">
-          Own Your Data. Earn From It.
-        </h1>
+            <h1 className="text-foreground mb-6 text-4xl font-bold tracking-tight md:text-6xl">
+              Own Your Data. Earn From It.
+            </h1>
 
-        <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-xl">
-          Researchers need data. You have it. Get compensated while advancing
-          medicine—on your terms.
-        </p>
+            <p className="text-muted-foreground mb-8 max-w-xl text-lg">
+              Researchers need data. You have it. Get compensated while
+              advancing medicine—on your terms.
+            </p>
 
-        <Link href="/connect">
-          <Button
-            size="lg"
-            className="bg-medical-gradient text-primary-foreground cursor-pointer rounded-xl px-10 py-4 font-bold transition-all hover:opacity-90"
-          >
-            Start Earning
-          </Button>
-        </Link>
+            <Link href="/connect">
+              <Button
+                size="lg"
+                className="bg-medical-gradient text-primary-foreground cursor-pointer rounded-xl px-12 py-6 text-lg font-bold transition-all hover:opacity-90"
+              >
+                Start Earning
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex justify-center">
+            <Image
+              src="/earn-by-sharing-data.png"
+              alt="Earn by sharing data"
+              width={500}
+              height={500}
+              priority
+            />
+          </div>
+        </div>
       </div>
-
-      <Image
-        src="/ilustrator.png"
-        alt="Health data illustration"
-        width={500}
-        height={432}
-        className="pointer-events-none absolute left-[48%] z-0 -translate-x-1/2 opacity-40"
-        priority
-      />
     </section>
   );
 }
