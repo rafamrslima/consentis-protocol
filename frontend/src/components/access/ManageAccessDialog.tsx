@@ -38,14 +38,13 @@ export function ManageAccessDialog({
     grantConsent,
     revokeConsent,
     isPending,
-    isConfirming,
     isConfirmed,
     error,
     hash,
     reset,
   } = useConsentRegistry();
 
-  const isLoading = isPending || isConfirming;
+  const isLoading = isPending;
   const isValidInput = isValidAddress(researcherAddress);
 
   const handleGrant = () => {
@@ -103,13 +102,13 @@ export function ManageAccessDialog({
           )}
 
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-red-700">
+            <div className="bg-destructive/10 text-destructive rounded-lg p-3">
               Transaction failed: {error.message}
             </div>
           )}
 
           {hash && !isConfirmed && (
-            <div className="rounded-lg bg-blue-50 p-3 text-blue-700">
+            <div className="bg-primary/10 text-primary rounded-lg p-3">
               <p className="text-sm">Transaction submitted!</p>
               <a
                 href={`https://sepolia.etherscan.io/tx/${hash}`}
