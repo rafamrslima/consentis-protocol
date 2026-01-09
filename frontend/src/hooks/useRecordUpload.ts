@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useWalletClient } from "wagmi";
+import { useWalletClient, useWriteContract, useConfig } from "wagmi";
+import { waitForTransactionReceipt } from "@wagmi/core";
 import { encryptFile } from "@/services/lit";
 import { createRecord } from "@/services/api";
+import {
+  CONSENT_REGISTRY_ABI,
+  CONSENT_REGISTRY_ADDRESS,
+} from "@/contracts/consentRegistry";
 
 export type UploadStatus =
   | "idle"
   | "encrypting"
+  | "registering"
   | "uploading"
   | "success"
   | "error";
@@ -23,6 +29,8 @@ export function useRecordUpload(): UseRecordUploadReturn {
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
+  const config = useConfig();
 
   const reset = () => {
     setStatus("idle");
@@ -49,7 +57,18 @@ export function useRecordUpload(): UseRecordUploadReturn {
       const { encryptedBlob, dataToEncryptHash, evmContractConditions } =
         await encryptFile(file, patientAddress, recordId);
 
-      // Step 2: Upload to backend with the same conditions used for encryption
+      // Step 2: Register record on blockchain
+      setStatus("registering");
+      const hash = await writeContractAsync({
+        address: CONSENT_REGISTRY_ADDRESS,
+        abi: CONSENT_REGISTRY_ABI,
+        functionName: "registerRecord",
+        args: [recordId],
+      });
+
+      await waitForTransactionReceipt(config, { hash });
+
+      // Step 3: Upload to backend with the same conditions used for encryption
       setStatus("uploading");
       const result = await createRecord({
         name,
