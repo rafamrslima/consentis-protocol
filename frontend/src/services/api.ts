@@ -2,6 +2,7 @@ import type {
   AccessControlConditions,
   PatientRecord,
   ResearcherRecord,
+  ResearcherProfile,
   Record,
 } from "@/types";
 
@@ -94,4 +95,39 @@ export async function getResearcherRecords(
   );
 
   return handleResponse<ResearcherRecord[]>(response);
+}
+
+export interface ResearcherProfileResponse {
+  id: string;
+  full_name: string;
+  institution: string;
+  department: string;
+  professional_email: string;
+  credentials_url: string;
+  bio: string;
+  wallet_address: string;
+}
+
+export async function getResearcherProfileByAddress(
+  address: string
+): Promise<ResearcherProfileResponse | null> {
+  const response = await fetch(`${API_URL}/api/v1/users/researcher/${address}`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  return handleResponse<ResearcherProfileResponse>(response);
+}
+
+export async function createResearcherProfile(
+  profile: ResearcherProfile
+): Promise<string> {
+  const response = await fetch(`${API_URL}/api/v1/users/researcher`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(profile),
+  });
+
+  return handleResponse<string>(response);
 }

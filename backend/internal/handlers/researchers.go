@@ -26,19 +26,20 @@ func getResearcherByAddress(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Ethereum address format", http.StatusBadRequest)
 		return
 	}
-	researcherID, err := repositories.GetUserByResearcherAddress(address)
+
+	profile, err := repositories.GetResearcherProfileByAddress(address)
 	if err != nil {
 		http.Error(w, "Failed to retrieve researcher", http.StatusInternalServerError)
 		log.Printf("Error retrieving researcher: %v", err)
 		return
 	}
 
-	if researcherID == "" {
+	if profile == nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	data, err := json.Marshal(researcherID)
+	data, err := json.Marshal(profile)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

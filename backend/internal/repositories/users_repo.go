@@ -59,6 +59,46 @@ func GetUserByResearcherAddress(researcherAddress string) (string, error) {
 	return userID, nil
 }
 
+func GetResearcherProfileByAddress(walletAddress string) (*dtos.ResearcherResponseDto, error) {
+	pool, err := GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	var profile dtos.ResearcherResponseDto
+	err = pool.QueryRow(ctx, `
+		SELECT u.id, u.wallet_address, rp.full_name, rp.institution,
+		       COALESCE(rp.department, '') as department,
+		       rp.professional_email,
+		       COALESCE(rp.credentials_url, '') as credentials_url,
+		       COALESCE(rp.bio, '') as bio
+		FROM users u
+		JOIN researcher_profiles rp ON u.id = rp.user_id
+		WHERE u.role = 'researcher' AND u.wallet_address = $1
+	`, walletAddress).Scan(
+		&profile.ID,
+		&profile.WalletAddress,
+		&profile.FullName,
+		&profile.Institution,
+		&profile.Department,
+		&profile.ProfessionalEmail,
+		&profile.CredentialsURL,
+		&profile.Bio,
+	)
+
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return nil, nil
+		}
+		log.Println("Error fetching researcher profile:", err)
+		return nil, err
+	}
+
+	return &profile, nil
+}
+
 func SaveResearcher(researcher dtos.ResearcherCreateDto) (string, error) {
 	pool, err := GetDB()
 	if err != nil {

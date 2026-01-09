@@ -220,8 +220,8 @@ export function ResearcherRecordsList({
                   {decryptingId === record.id
                     ? status === "fetching"
                       ? "Fetching..."
-                      : "Decrypting..."
-                    : "Decrypt"}
+                      : "Downloading..."
+                    : "Download"}
                 </Button>
               </TableCell>
             </TableRow>

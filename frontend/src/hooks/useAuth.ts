@@ -14,10 +14,12 @@ export function useAuth() {
     role,
     isAuthenticated,
     _hasHydrated,
+    profileStatus,
     setWalletAddress,
     setRole,
     setUser,
     clearUser,
+    setProfileStatus,
   } = useUserStore();
 
   const isWagmiLoading = status === "connecting" || status === "reconnecting";
@@ -48,6 +50,9 @@ export function useAuth() {
   const selectRole = (selectedRole: UserRole) => {
     if (address) {
       setUser(address, selectedRole);
+      if (selectedRole === "researcher") {
+        setProfileStatus("unknown");
+      }
     } else {
       setRole(selectedRole);
     }
@@ -60,7 +65,13 @@ export function useAuth() {
 
   const isLoading = !_hasHydrated || isWagmiLoading;
   const needsRoleSelection = !isLoading && isConnected && address && !role;
-  const isFullyAuthenticated = !isLoading && isConnected && address && role && isAuthenticated;
+  const isFullyAuthenticated =
+    !isLoading && isConnected && address && role && isAuthenticated;
+  const needsResearcherProfile =
+    !isLoading &&
+    isConnected &&
+    role === "researcher" &&
+    (profileStatus === "unknown" || profileStatus === "incomplete");
 
   return {
     address,
@@ -71,6 +82,8 @@ export function useAuth() {
     role,
     isAuthenticated: isFullyAuthenticated,
     needsRoleSelection,
+    needsResearcherProfile,
+    profileStatus,
 
     selectRole,
     logout,
