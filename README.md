@@ -317,37 +317,6 @@ forge test --match-test test_GrantConsent_Success
 forge coverage
 ```
 
-### Backend
-```bash
-cd backend
-
-# Run all tests
-go test ./...
-
-# Run with verbose output
-go test ./... -v
-
-# Run with coverage
-go test ./... -cover
-
-# Test specific package
-go test ./internal/handlers -v
-```
-
-### Frontend
-```bash
-cd frontend
-
-# Run tests (when implemented)
-npm test
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-```
-
 ## Deployment
 
 ### Prerequisites
