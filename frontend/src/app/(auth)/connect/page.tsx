@@ -5,25 +5,58 @@ import { useRouter } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { RoleSelector } from "@/components/wallet/RoleSelector";
 import { useAuth } from "@/hooks/useAuth";
+import { useResearcherProfile } from "@/hooks/useResearcherProfile";
 
 export default function ConnectPage() {
   const router = useRouter();
   const {
+    address,
     isConnected,
     isLoading,
     isAuthenticated,
     needsRoleSelection,
     role,
     selectRole,
+    profileStatus,
   } = useAuth();
 
-  // Redirect authenticated users to their dashboard
+  const { checkProfile, isChecking, hasProfile, needsProfile } =
+    useResearcherProfile(role === "researcher" ? address : undefined);
+
   useEffect(() => {
-    if (isAuthenticated && role) {
-      const destination = role === "patient" ? "/records" : "/shared";
-      router.push(destination);
+    if (role === "researcher" && address && profileStatus === "unknown") {
+      checkProfile();
     }
-  }, [isAuthenticated, role, router]);
+  }, [role, address, profileStatus, checkProfile]);
+
+  useEffect(() => {
+    if (isLoading || isChecking) return;
+
+    if (!isAuthenticated || !role) return;
+
+    if (role === "patient") {
+      router.push("/records");
+      return;
+    }
+
+    if (role === "researcher") {
+      if (needsProfile) {
+        router.push("/researcher-profile");
+      } else if (hasProfile) {
+        router.push("/shared");
+      }
+    }
+  }, [
+    isAuthenticated,
+    role,
+    isLoading,
+    isChecking,
+    hasProfile,
+    needsProfile,
+    router,
+  ]);
+
+  const showLoading = isLoading || (role === "researcher" && isChecking);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -43,11 +76,13 @@ export default function ConnectPage() {
             <ConnectButton />
           </div>
         ) : needsRoleSelection ? (
-          <RoleSelector onSelect={selectRole} isLoading={isLoading} />
+          <RoleSelector onSelect={selectRole} isLoading={showLoading} />
         ) : (
           <div className="flex flex-col items-center space-y-4">
             <ConnectButton />
-            <p className="text-muted-foreground text-sm">Redirecting...</p>
+            <p className="text-muted-foreground text-sm">
+              {isChecking ? "Checking profile..." : "Redirecting..."}
+            </p>
           </div>
         )}
       </div>
