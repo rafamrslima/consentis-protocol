@@ -15,7 +15,7 @@ export default function SharedPage() {
 
   return (
     <ProtectedRoute allowedRoles={["researcher"]}>
-      <div className="bg-background min-h-screen">
+      <div className="min-h-screen">
         <header className="border-border border-b">
           <div className="container mx-auto flex h-14 items-center justify-between px-4">
             <div className="flex items-center gap-2">
