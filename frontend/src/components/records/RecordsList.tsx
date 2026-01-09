@@ -147,7 +147,7 @@ export function RecordsList({ records, isLoading }: RecordsListProps) {
                       {decryptingId === record.id
                         ? status === "fetching"
                           ? "Fetching..."
-                          : "Decrypting..."
+                          : "Downloading..."
                         : "View"}
                     </Button>
                     <Button
