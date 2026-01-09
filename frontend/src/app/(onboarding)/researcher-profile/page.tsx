@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,10 +36,10 @@ interface FormErrors {
 export default function ResearcherProfilePage() {
   const router = useRouter();
   const { address, role, isLoading: authLoading } = useAuth();
-  const { createProfile, isCreating, hasProfile } =
+  const { createProfile, isCreating, hasProfile, profile, isLoadingProfile } =
     useResearcherProfile(address);
 
-  const [formData, setFormData] = useState<FormData>({
+  const getInitialFormData = (): FormData => ({
     full_name: "",
     institution: "",
     department: "",
@@ -48,6 +47,24 @@ export default function ResearcherProfilePage() {
     credentials_url: "",
     bio: "",
   });
+
+  const [formData, setFormData] = useState<FormData>(getInitialFormData);
+  const [profileIdSynced, setProfileIdSynced] = useState<string | null>(null);
+
+  const profileId = profile?.id ?? null;
+  const shouldSyncForm = profile && profileId && profileIdSynced !== profileId;
+
+  if (shouldSyncForm) {
+    setProfileIdSynced(profileId);
+    setFormData({
+      full_name: profile.full_name || "",
+      institution: profile.institution || "",
+      department: profile.department || "",
+      professional_email: profile.professional_email || "",
+      credentials_url: profile.credentials_url || "",
+      bio: profile.bio || "",
+    });
+  }
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -127,7 +144,11 @@ export default function ResearcherProfilePage() {
     }
   };
 
-  if (authLoading) {
+  const showLoading =
+    authLoading ||
+    (hasProfile && !profileIdSynced && (isLoadingProfile || !profile));
+
+  if (showLoading) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center">
         <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
@@ -139,15 +160,6 @@ export default function ResearcherProfilePage() {
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          {hasProfile && (
-            <Link
-              href="/shared"
-              className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center text-sm transition-colors"
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              Back to Dashboard
-            </Link>
-          )}
           <CardTitle>
             {hasProfile ? "Researcher Profile" : "Complete Your Profile"}
           </CardTitle>
