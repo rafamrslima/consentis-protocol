@@ -57,7 +57,17 @@ export function useRecordUpload(): UseRecordUploadReturn {
       const { encryptedBlob, dataToEncryptHash, evmContractConditions } =
         await encryptFile(file, patientAddress, recordId);
 
-      // Step 2: Register record on blockchain
+      // Step 2: Upload to backend with the same conditions used for encryption
+      setStatus("uploading");
+      const result = await createRecord({
+        name,
+        patientAddress,
+        dataToEncryptHash,
+        accJson: evmContractConditions,
+        encryptedFile: encryptedBlob,
+      });
+
+      // Step 3: Register record on blockchain
       setStatus("registering");
       const hash = await writeContractAsync({
         address: CONSENT_REGISTRY_ADDRESS,
@@ -67,16 +77,6 @@ export function useRecordUpload(): UseRecordUploadReturn {
       });
 
       await waitForTransactionReceipt(config, { hash });
-
-      // Step 3: Upload to backend with the same conditions used for encryption
-      setStatus("uploading");
-      const result = await createRecord({
-        name,
-        patientAddress,
-        dataToEncryptHash,
-        accJson: evmContractConditions,
-        encryptedFile: encryptedBlob,
-      });
 
       setStatus("success");
       return result.cid;
