@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/store/useUserStore";
 import {
   getResearcherProfileByAddress,
   createResearcherProfile,
+  type ResearcherProfileResponse,
 } from "@/services/api";
 
 export const RESEARCHER_PROFILE_KEY = "researcherProfile";
@@ -25,12 +26,20 @@ export function useResearcherProfile(address: string | undefined) {
     queryKey: [RESEARCHER_PROFILE_KEY, address],
     queryFn: async () => {
       setProfileStatus("checking");
-      const profileId = await getResearcherProfileByAddress(address!);
-      setResearcherProfile(profileId || "");
-      return profileId;
+      const profile = await getResearcherProfileByAddress(address!);
+      setResearcherProfile(profile?.id || "");
+      return profile;
     },
     enabled: shouldCheck,
     staleTime: 0,
+  });
+
+  const profileQuery = useQuery({
+    queryKey: [RESEARCHER_PROFILE_KEY, "data", address],
+    queryFn: () => getResearcherProfileByAddress(address!),
+    enabled: !!address && profileStatus === "complete",
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const createMutation = useMutation({
@@ -38,7 +47,7 @@ export function useResearcherProfile(address: string | undefined) {
     onSuccess: (profileId) => {
       setResearcherProfile(profileId);
       queryClient.invalidateQueries({
-        queryKey: [RESEARCHER_PROFILE_KEY, address],
+        queryKey: [RESEARCHER_PROFILE_KEY],
       });
     },
   });
@@ -52,10 +61,15 @@ export function useResearcherProfile(address: string | undefined) {
   const hasProfile = profileStatus === "complete";
   const needsProfile = profileStatus === "incomplete";
 
+  const profile: ResearcherProfileResponse | null =
+    checkQuery.data || profileQuery.data || null;
+
   return {
     profileId: researcherProfileId,
     profileStatus,
+    profile,
     isChecking: checkQuery.isLoading || profileStatus === "checking",
+    isLoadingProfile: profileQuery.isLoading || profileQuery.isFetching,
     hasProfile,
     needsProfile,
 

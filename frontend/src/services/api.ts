@@ -97,16 +97,27 @@ export async function getResearcherRecords(
   return handleResponse<ResearcherRecord[]>(response);
 }
 
+export interface ResearcherProfileResponse {
+  id: string;
+  full_name: string;
+  institution: string;
+  department: string;
+  professional_email: string;
+  credentials_url: string;
+  bio: string;
+  wallet_address: string;
+}
+
 export async function getResearcherProfileByAddress(
   address: string
-): Promise<string | null> {
+): Promise<ResearcherProfileResponse | null> {
   const response = await fetch(`${API_URL}/api/v1/users/researcher/${address}`);
 
   if (response.status === 404) {
     return null;
   }
 
-  return handleResponse<string>(response);
+  return handleResponse<ResearcherProfileResponse>(response);
 }
 
 export async function createResearcherProfile(
