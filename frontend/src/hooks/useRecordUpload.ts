@@ -13,8 +13,8 @@ import {
 export type UploadStatus =
   | "idle"
   | "encrypting"
-  | "registering"
   | "uploading"
+  | "registering"
   | "success"
   | "error";
 
@@ -49,17 +49,18 @@ export function useRecordUpload(): UseRecordUploadReturn {
     setError(null);
 
     try {
-      // Generate a unique record ID
-      const recordId = `record_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      // Step 1: Generate UUID for the record
+      const recordId = crypto.randomUUID();
 
-      // Step 1: Encrypt the file (returns evmContractConditions used for encryption)
+      // Step 2: Encrypt the file (returns evmContractConditions used for encryption)
       setStatus("encrypting");
       const { encryptedBlob, dataToEncryptHash, evmContractConditions } =
         await encryptFile(file, patientAddress, recordId);
 
-      // Step 2: Upload to backend with the same conditions used for encryption
+      // Step 3: Upload to backend with the same conditions used for encryption
       setStatus("uploading");
       const result = await createRecord({
+        recordId,
         name,
         patientAddress,
         dataToEncryptHash,
@@ -67,8 +68,14 @@ export function useRecordUpload(): UseRecordUploadReturn {
         encryptedFile: encryptedBlob,
       });
 
-      // Step 3: Register record on blockchain
+      // Step 4: Register record on blockchain
       setStatus("registering");
+      console.log("[Blockchain] Registering record:", {
+        recordId,
+        contractAddress: CONSENT_REGISTRY_ADDRESS,
+        patientAddress,
+      });
+
       const hash = await writeContractAsync({
         address: CONSENT_REGISTRY_ADDRESS,
         abi: CONSENT_REGISTRY_ABI,
@@ -76,7 +83,15 @@ export function useRecordUpload(): UseRecordUploadReturn {
         args: [recordId],
       });
 
-      await waitForTransactionReceipt(config, { hash });
+      console.log("[Blockchain] Transaction submitted:", hash);
+
+      const receipt = await waitForTransactionReceipt(config, { hash });
+
+      console.log("[Blockchain] Transaction confirmed:", {
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        status: receipt.status,
+      });
 
       setStatus("success");
       return result.cid;
