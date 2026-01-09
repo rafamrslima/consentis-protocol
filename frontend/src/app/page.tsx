@@ -27,7 +27,7 @@ export default function Home() {
             <Link href="/connect">
               <Button
                 size="lg"
-                className="bg-medical-gradient text-primary-foreground cursor-pointer rounded-xl px-12 py-6 text-lg font-bold transition-all hover:opacity-90"
+                className="bg-medical-gradient hover:bg-medical-gradient text-primary-foreground rounded-xl px-12 py-6 text-lg font-bold transition-all hover:opacity-90"
               >
                 Start Earning
               </Button>
