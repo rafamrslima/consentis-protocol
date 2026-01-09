@@ -24,6 +24,7 @@ func StartRecordsHandler(mux *http.ServeMux) {
 
 func addRecord(w http.ResponseWriter, r *http.Request) {
 	recordDto := dtos.RecordCreateRequest{
+		ID:                r.FormValue("record_id"),
 		PatientAddress:    r.FormValue("patient_address"),
 		Name:              r.FormValue("name"),
 		ACCJson:           json.RawMessage(r.FormValue("acc_json")),
@@ -85,8 +86,9 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Record added successfully",
-		"cid":     record.IPFSCid,
+		"message":   "Record added successfully",
+		"cid":       record.IPFSCid,
+		"record_id": record.ID,
 	})
 }
 

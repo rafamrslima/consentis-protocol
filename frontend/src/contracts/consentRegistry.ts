@@ -4,6 +4,30 @@ export const CONSENT_REGISTRY_ADDRESS = process.env
 export const CONSENT_REGISTRY_ABI = [
   {
     type: "function",
+    name: "registerRecord",
+    inputs: [{ name: "recordId", type: "string", internalType: "string" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "isRecordOwner",
+    inputs: [
+      { name: "recordId", type: "string", internalType: "string" },
+      { name: "owner", type: "address", internalType: "address" },
+    ],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getRecordOwner",
+    inputs: [{ name: "recordId", type: "string", internalType: "string" }],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "grantConsent",
     inputs: [
       { name: "researcher", type: "address", internalType: "address" },
@@ -90,6 +114,25 @@ export const CONSENT_REGISTRY_ABI = [
         type: "string",
         indexed: false,
         internalType: "string",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "RecordRegistered",
+    inputs: [
+      {
+        name: "recordId",
+        type: "string",
+        indexed: true,
+        internalType: "string",
+      },
+      {
+        name: "owner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
     ],
     anonymous: false,

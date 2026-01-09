@@ -33,9 +33,9 @@ func CreateRecord(record models.Record, patientAddress string) error {
 	}
 
 	_, err = tx.Exec(ctx,
-		`INSERT INTO records (patient_id, name, ipfs_cid, data_to_encrypt_hash, acc_json) 
-		VALUES ($1, $2, $3, $4, $5)`,
-		patientId, record.Name, record.IPFSCid, record.DataToEncryptHash, record.AccJson)
+		`INSERT INTO records (id, patient_id, name, ipfs_cid, data_to_encrypt_hash, acc_json)
+		VALUES ($1, $2, $3, $4, $5, $6)`,
+		record.ID, patientId, record.Name, record.IPFSCid, record.DataToEncryptHash, record.AccJson)
 
 	if err != nil {
 		log.Println(err)

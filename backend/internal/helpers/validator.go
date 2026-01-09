@@ -7,6 +7,10 @@ import (
 )
 
 func ValidateRecord(record dtos.RecordCreateRequest) error {
+	if strings.TrimSpace(record.ID) == "" {
+		return errors.New("record_id is required and cannot be empty")
+	}
+
 	if strings.TrimSpace(record.Name) == "" {
 		return errors.New("Name is required and cannot be empty")
 	}

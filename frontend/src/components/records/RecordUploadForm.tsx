@@ -23,7 +23,10 @@ export function RecordUploadForm({
   const [recordName, setRecordName] = useState("");
   const { upload, status, error, reset } = useRecordUpload();
 
-  const isLoading = status === "encrypting" || status === "uploading";
+  const isLoading =
+    status === "encrypting" ||
+    status === "uploading" ||
+    status === "registering";
   const isDisabled = isLoading || status === "success";
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -130,7 +133,9 @@ export function RecordUploadForm({
                 ? "Encrypting..."
                 : status === "uploading"
                   ? "Uploading..."
-                  : "Upload Record"}
+                  : status === "registering"
+                    ? "Registering..."
+                    : "Upload Record"}
             </Button>
           </>
         )}

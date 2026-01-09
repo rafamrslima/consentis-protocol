@@ -30,6 +30,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export interface CreateRecordRequest {
+  recordId: string;
   name: string;
   patientAddress: string;
   dataToEncryptHash: string;
@@ -46,6 +47,7 @@ export async function createRecord(
   request: CreateRecordRequest
 ): Promise<CreateRecordResponse> {
   const formData = new FormData();
+  formData.append("record_id", request.recordId);
   formData.append("name", request.name);
   formData.append("patient_address", request.patientAddress);
   formData.append("data_to_encrypt_hash", request.dataToEncryptHash);
