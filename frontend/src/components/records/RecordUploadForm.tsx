@@ -25,8 +25,8 @@ export function RecordUploadForm({
 
   const isLoading =
     status === "encrypting" ||
-    status === "registering" ||
-    status === "uploading";
+    status === "uploading" ||
+    status === "registering";
   const isDisabled = isLoading || status === "success";
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
