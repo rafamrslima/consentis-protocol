@@ -1,5 +1,17 @@
 export type UserRole = "patient" | "researcher";
 
+export type ProfileStatus = "unknown" | "checking" | "complete" | "incomplete";
+
+export interface ResearcherProfile {
+  full_name: string;
+  institution: string;
+  department?: string;
+  professional_email: string;
+  credentials_url?: string;
+  bio?: string;
+  wallet_address: string;
+}
+
 export interface User {
   id: string;
   walletAddress: string;
