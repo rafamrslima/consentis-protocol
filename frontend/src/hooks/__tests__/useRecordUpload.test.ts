@@ -43,6 +43,8 @@ import { useWalletClient } from "wagmi";
 describe("useRecordUpload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(useWalletClient).mockReturnValue({
       data: mockWalletClient,
     } as unknown as ReturnType<typeof useWalletClient>);
