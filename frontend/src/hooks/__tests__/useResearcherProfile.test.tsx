@@ -42,6 +42,11 @@ function createTestQueryClient() {
         retry: false,
       },
     },
+    logger: {
+      log: () => {},
+      warn: () => {},
+      error: () => {},
+    },
   });
 }
 
@@ -57,6 +62,8 @@ function createWrapper() {
 describe("useResearcherProfile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetResearcherProfileByAddress.mockResolvedValue(null);
     vi.mocked(useUserStore).mockReturnValue({
       researcherProfileId: "",
       profileStatus: "unknown",

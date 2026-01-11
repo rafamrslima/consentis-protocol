@@ -44,6 +44,7 @@ const createMockRecord = (
 describe("useDecrypt", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(useWalletClient).mockReturnValue({
       data: mockWalletClient,
     } as unknown as ReturnType<typeof useWalletClient>);
