@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  FileText,
-  ExternalLink,
-  Download,
-  Loader2,
-  Lock,
-  Unlock,
-} from "lucide-react";
+import { FileText, Download, Loader2, Lock, Unlock } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -36,11 +29,6 @@ function formatDate(dateString: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function truncateCid(cid: string): string {
-  if (cid.length <= 16) return cid;
-  return `${cid.slice(0, 8)}...${cid.slice(-8)}`;
 }
 
 function truncateAddress(address: string): string {
@@ -169,7 +157,6 @@ export function ResearcherRecordsList({
             <TableHead className="w-12"></TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Patient</TableHead>
-            <TableHead>IPFS CID</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
             <TableHead className="w-32">Actions</TableHead>
@@ -184,17 +171,6 @@ export function ResearcherRecordsList({
               <TableCell className="font-medium">{record.name}</TableCell>
               <TableCell className="font-mono text-sm">
                 {truncateAddress(record.patient_address)}
-              </TableCell>
-              <TableCell>
-                <a
-                  href={`https://gateway.pinata.cloud/ipfs/${record.ipfs_cid}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-sm transition-colors"
-                >
-                  {truncateCid(record.ipfs_cid)}
-                  <ExternalLink className="h-3 w-3" />
-                </a>
               </TableCell>
               <TableCell>
                 <ConsentBadge status={record.consent_status} />
