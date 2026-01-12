@@ -133,3 +133,31 @@ export async function createResearcherProfile(
 
   return handleResponse<string>(response);
 }
+
+export interface UpdateResearcherProfileRequest {
+  full_name: string;
+  institution: string;
+  department: string;
+  professional_email: string;
+  credentials_url: string;
+  bio: string;
+}
+
+export async function updateResearcherProfile(
+  address: string,
+  profile: UpdateResearcherProfileRequest
+): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/api/v1/users/researcher/${address}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    }
+  );
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => "Request failed");
+    throw new ApiError(response.status, message);
+  }
+}

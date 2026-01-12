@@ -36,8 +36,17 @@ interface FormErrors {
 export default function ResearcherProfilePage() {
   const router = useRouter();
   const { address, role, isLoading: authLoading } = useAuth();
-  const { createProfile, isCreating, hasProfile, profile, isLoadingProfile } =
-    useResearcherProfile(address);
+  const {
+    createProfile,
+    updateProfile,
+    isCreating,
+    isUpdating,
+    hasProfile,
+    profile,
+    isLoadingProfile,
+  } = useResearcherProfile(address);
+
+  const isSaving = isCreating || isUpdating;
 
   const getInitialFormData = (): FormData => ({
     full_name: "",
@@ -117,13 +126,14 @@ export default function ResearcherProfilePage() {
     if (!validateForm() || !address) return;
 
     try {
-      const isNewProfile = !hasProfile;
-      await createProfile({
-        ...formData,
-        wallet_address: address,
-      });
-
-      if (isNewProfile) {
+      if (hasProfile) {
+        await updateProfile(formData);
+        toast.success("Profile updated successfully!");
+      } else {
+        await createProfile({
+          ...formData,
+          wallet_address: address,
+        });
         setFormData({
           full_name: "",
           institution: "",
@@ -134,8 +144,6 @@ export default function ResearcherProfilePage() {
         });
         toast.success("Profile created successfully!");
         router.push("/shared");
-      } else {
-        toast.success("Profile updated successfully!");
       }
     } catch (err) {
       setSubmitError(
@@ -184,7 +192,7 @@ export default function ResearcherProfilePage() {
                   aria-describedby={
                     errors.full_name ? "full_name-error" : undefined
                   }
-                  disabled={isCreating}
+                  disabled={isSaving}
                 />
                 {errors.full_name && (
                   <p
@@ -209,7 +217,7 @@ export default function ResearcherProfilePage() {
                   aria-describedby={
                     errors.institution ? "institution-error" : undefined
                   }
-                  disabled={isCreating}
+                  disabled={isSaving}
                 />
                 {errors.institution && (
                   <p
@@ -229,7 +237,7 @@ export default function ResearcherProfilePage() {
                   value={formData.department}
                   onChange={handleChange("department")}
                   placeholder="Oncology Research"
-                  disabled={isCreating}
+                  disabled={isSaving}
                 />
               </div>
 
@@ -248,7 +256,7 @@ export default function ResearcherProfilePage() {
                       ? "professional_email-error"
                       : undefined
                   }
-                  disabled={isCreating}
+                  disabled={isSaving}
                 />
                 {errors.professional_email && (
                   <p
@@ -268,7 +276,7 @@ export default function ResearcherProfilePage() {
                   value={formData.credentials_url}
                   onChange={handleChange("credentials_url")}
                   placeholder="https://orcid.org/0000-0000-0000-0000"
-                  disabled={isCreating}
+                  disabled={isSaving}
                 />
               </div>
 
@@ -279,7 +287,7 @@ export default function ResearcherProfilePage() {
                   value={formData.bio}
                   onChange={handleChange("bio")}
                   placeholder="Brief description of your research focus"
-                  disabled={isCreating}
+                  disabled={isSaving}
                   rows={3}
                 />
               </div>
@@ -291,9 +299,9 @@ export default function ResearcherProfilePage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isCreating}>
-              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isCreating
+            <Button type="submit" className="w-full" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving
                 ? hasProfile
                   ? "Updating Profile..."
                   : "Creating Profile..."

@@ -6,7 +6,9 @@ import { useUserStore } from "@/store/useUserStore";
 import {
   getResearcherProfileByAddress,
   createResearcherProfile,
+  updateResearcherProfile,
   type ResearcherProfileResponse,
+  type UpdateResearcherProfileRequest,
 } from "@/services/api";
 
 export const RESEARCHER_PROFILE_KEY = "researcherProfile";
@@ -52,6 +54,16 @@ export function useResearcherProfile(address: string | undefined) {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (profile: UpdateResearcherProfileRequest) =>
+      updateResearcherProfile(address!, profile),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [RESEARCHER_PROFILE_KEY],
+      });
+    },
+  });
+
   const checkProfile = useCallback(() => {
     if (address && profileStatus === "unknown") {
       checkQuery.refetch();
@@ -77,5 +89,9 @@ export function useResearcherProfile(address: string | undefined) {
     createProfile: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
     createError: createMutation.error,
+
+    updateProfile: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    updateError: updateMutation.error,
   };
 }
