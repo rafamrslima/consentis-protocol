@@ -113,3 +113,77 @@ func SaveResearcher(researcher dtos.ResearcherCreateDto) (string, error) {
 	log.Println("Researcher saved successfully with ID:", researcherID)
 	return researcherID, nil
 }
+
+func IsEmailTakenByOther(email string, walletAddress string) (bool, error) {
+	pool, err := GetDB()
+	if err != nil {
+		return false, err
+	}
+
+	ctx := context.Background()
+	var count int
+	err = pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM researcher_profiles rp
+		JOIN users u ON rp.user_id = u.id
+		WHERE rp.professional_email = $1 AND u.wallet_address != $2
+	`, email, walletAddress).Scan(&count)
+
+	if err != nil {
+		log.Println("Error checking email uniqueness:", err)
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func UpdateResearcherProfile(walletAddress string, researcher dtos.ResearcherUpdateDto) error {
+	pool, err := GetDB()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	var userID string
+	err = pool.QueryRow(ctx, `
+		SELECT u.id 
+		FROM users u
+		WHERE u.wallet_address = $1 AND u.role = 'researcher'
+	`, walletAddress).Scan(&userID)
+
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			log.Println("Researcher not found with wallet address:", walletAddress)
+			return err
+		}
+		log.Println("Error finding researcher:", err)
+		return err
+	}
+
+	result, err := pool.Exec(ctx, `
+		UPDATE researcher_profiles 
+		SET full_name = $1,
+		    institution = $2,
+		    department = $3,
+		    professional_email = $4,
+		    credentials_url = $5,
+		    bio = $6,
+		    updated_at = NOW()
+		WHERE user_id = $7
+	`, researcher.FullName, researcher.Institution, researcher.Department,
+		researcher.ProfessionalEmail, researcher.CredentialsURL, researcher.Bio, userID)
+
+	if err != nil {
+		log.Println("Error updating researcher profile:", err)
+		return err
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		log.Println("No rows updated for user_id:", userID)
+		return err
+	}
+
+	log.Println("Researcher profile updated successfully for wallet address:", walletAddress)
+	return nil
+}
