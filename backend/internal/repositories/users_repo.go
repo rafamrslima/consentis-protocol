@@ -114,6 +114,29 @@ func SaveResearcher(researcher dtos.ResearcherCreateDto) (string, error) {
 	return researcherID, nil
 }
 
+func IsEmailTakenByOther(email string, walletAddress string) (bool, error) {
+	pool, err := GetDB()
+	if err != nil {
+		return false, err
+	}
+
+	ctx := context.Background()
+	var count int
+	err = pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM researcher_profiles rp
+		JOIN users u ON rp.user_id = u.id
+		WHERE rp.professional_email = $1 AND u.wallet_address != $2
+	`, email, walletAddress).Scan(&count)
+
+	if err != nil {
+		log.Println("Error checking email uniqueness:", err)
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func UpdateResearcherProfile(walletAddress string, researcher dtos.ResearcherUpdateDto) error {
 	pool, err := GetDB()
 	if err != nil {

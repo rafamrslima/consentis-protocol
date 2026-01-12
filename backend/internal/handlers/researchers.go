@@ -116,6 +116,17 @@ func updateResearcher(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emailTaken, err := repositories.IsEmailTakenByOther(researcher.ProfessionalEmail, address)
+	if err != nil {
+		http.Error(w, "Failed to validate email", http.StatusInternalServerError)
+		log.Printf("Error checking email uniqueness: %v", err)
+		return
+	}
+	if emailTaken {
+		http.Error(w, "Email is already in use by another researcher", http.StatusConflict)
+		return
+	}
+
 	err = repositories.UpdateResearcherProfile(address, researcher)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
