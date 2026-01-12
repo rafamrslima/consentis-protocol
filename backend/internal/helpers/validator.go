@@ -53,3 +53,19 @@ func ValidateResearcher(researcher dtos.ResearcherCreateDto) error {
 
 	return nil
 }
+
+func ValidateResearcherUpdate(researcher dtos.ResearcherUpdateDto) error {
+	if strings.TrimSpace(researcher.FullName) == "" {
+		return errors.New("Name is required and cannot be empty")
+	}
+
+	if strings.TrimSpace(researcher.Institution) == "" {
+		return errors.New("Institution is required and cannot be empty")
+	}
+
+	if strings.TrimSpace(researcher.ProfessionalEmail) == "" {
+		return errors.New("ProfessionalEmail is required and cannot be empty")
+	}
+
+	return nil
+}
