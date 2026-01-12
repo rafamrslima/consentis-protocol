@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { User } from "lucide-react";
+import { User, Search } from "lucide-react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useResearcherRecords } from "@/hooks/useResearcherRecords";
 import { ResearcherRecordsList } from "@/components/records/ResearcherRecordsList";
@@ -12,6 +14,16 @@ import { ResearcherRecordsList } from "@/components/records/ResearcherRecordsLis
 export default function SharedPage() {
   const { address } = useAuth();
   const { records, isLoading } = useResearcherRecords(address);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // TODO: Replace with backend search for better performance on large datasets
+  const filteredRecords = useMemo(() => {
+    if (!searchQuery.trim()) return records;
+    const query = searchQuery.toLowerCase();
+    return records.filter((record) =>
+      record.name.toLowerCase().includes(query)
+    );
+  }, [records, searchQuery]);
 
   return (
     <ProtectedRoute allowedRoles={["researcher"]}>
@@ -37,14 +49,28 @@ export default function SharedPage() {
 
         <div className="p-6">
           <div className="mx-auto max-w-5xl space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold">Shared Records</h1>
-              <p className="text-muted-foreground">
-                View and download records shared with you
-              </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold">Shared Records</h1>
+                <p className="text-muted-foreground">
+                  View and download records shared with you
+                </p>
+              </div>
+              <div className="relative w-64">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Input
+                  placeholder="Search by record name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
 
-            <ResearcherRecordsList records={records} isLoading={isLoading} />
+            <ResearcherRecordsList
+              records={filteredRecords}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </div>
