@@ -1,4 +1,4 @@
-package pinata
+package ipfs
 
 import (
 	"context"

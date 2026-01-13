@@ -3,7 +3,7 @@ package handlers
 import (
 	"consentis-api/internal/dtos"
 	"consentis-api/internal/helpers"
-	pinata "consentis-api/internal/ipfs"
+	"consentis-api/internal/ipfs"
 	"consentis-api/internal/repositories"
 	"encoding/json"
 	"log"
@@ -54,20 +54,20 @@ func addRecord(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	client, err := pinata.GetClient()
+	client, err := ipfs.GetClient()
 	if err != nil {
 		http.Error(w, "Failed to initialize IPFS client", http.StatusInternalServerError)
 		return
 	}
 
 	res, err := client.StreamToPinata(ctx, file, fileHeader.Filename,
-		&pinata.PinataMetadata{
+		&ipfs.PinataMetadata{
 			Name: recordDto.Name,
 			Keyvalues: map[string]string{
 				"patient": recordDto.PatientAddress,
 			},
 		},
-		&pinata.PinataOptions{CidVersion: 1},
+		&ipfs.PinataOptions{CidVersion: 1},
 	)
 	if err != nil {
 		http.Error(w, "IPFS upload failed", http.StatusBadGateway)
