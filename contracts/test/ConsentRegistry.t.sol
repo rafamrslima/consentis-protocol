@@ -151,4 +151,26 @@ contract ConsentRegistryTest is Test {
         assertFalse(registry.hasConsent(patient, researcher, recordId));
         assertTrue(registry.hasConsent(patient, researcher2, recordId));
     }
+
+    function test_CheckAccess_RevertIfWrongPatientAddress() public {
+        // Register record as patient
+        vm.prank(patient);
+        registry.registerRecord(recordId);
+        
+        // Try to check access with wrong patient address
+        address fakePatient = address(0x99);
+        vm.expectRevert("Invalid record owner");
+        registry.checkAccess(fakePatient, researcher, recordId);
+    }
+
+    function test_CheckAccess_PreventsFakeOwnershipClaim() public {
+        // Patient registers a record
+        vm.prank(patient);
+        registry.registerRecord(recordId);
+        
+        // Malicious researcher tries to access by claiming they're the patient
+        // This should revert because researcher is NOT the actual record owner
+        vm.expectRevert("Invalid record owner");
+        registry.checkAccess(researcher, researcher, recordId);
+    }
 }

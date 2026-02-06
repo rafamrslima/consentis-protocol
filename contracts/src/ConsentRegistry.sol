@@ -11,7 +11,6 @@ contract ConsentRegistry {
     event ConsentGranted(address indexed patient, address indexed researcher, string recordId);
     event ConsentRevoked(address indexed patient, address indexed researcher, string recordId);
 
-    // Register a new medical record
     function registerRecord(string calldata recordId) external {
         require(bytes(recordId).length > 0, "Record ID cannot be empty");
         require(bytes(recordId).length <= 100, "Record ID too long");
@@ -21,12 +20,10 @@ contract ConsentRegistry {
         emit RecordRegistered(recordId, msg.sender);
     }
 
-    // Check if an address owns a record
     function isRecordOwner(string calldata recordId, address owner) external view returns (bool) {
         return _recordOwners[recordId] == owner;
     }
 
-    // Get the owner of a record
     function getRecordOwner(string calldata recordId) external view returns (address) {
         return _recordOwners[recordId];
     }
