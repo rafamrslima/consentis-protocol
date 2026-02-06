@@ -51,6 +51,7 @@ contract ConsentRegistry {
     }
 
     function checkAccess(address patient, address researcher, string calldata recordId) external view returns (bool) {
+        require(_recordOwners[recordId] == patient, "Invalid record owner");
         if (patient == researcher) return true;
         return _consents[patient][recordId][researcher];
     }
