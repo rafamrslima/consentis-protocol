@@ -15,6 +15,7 @@ type Server struct {
 func NewServer(addr string) *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", homePage)
+	mux.HandleFunc("GET /health", healthCheck)
 
 	StartRecordsHandler(mux)
 	StartResearchersHandler(mux)
@@ -22,7 +23,6 @@ func NewServer(addr string) *Server {
 	return &Server{
 		httpServer: &http.Server{
 			Addr:         addr,
-			Handler:      WithCORS(mux),
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 15 * time.Second,
 			IdleTimeout:  60 * time.Second,
@@ -48,18 +48,8 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the home page!")
 }
 
-func WithCORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, `{"status":"healthy","service":"consentis-api"}`)
 }
