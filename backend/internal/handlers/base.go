@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"consentis-api/internal/middleware"
 	"context"
 	"fmt"
 	"log"
@@ -10,7 +11,8 @@ import (
 )
 
 type Server struct {
-	httpServer *http.Server
+	httpServer  *http.Server
+	rateLimiter *middleware.RateLimiter
 }
 
 func NewServer(addr string) *Server {
@@ -20,14 +22,17 @@ func NewServer(addr string) *Server {
 	StartRecordsHandler(mux)
 	StartResearchersHandler(mux)
 
+	rateLimiter := middleware.NewRateLimiter()
+
 	return &Server{
 		httpServer: &http.Server{
 			Addr:         addr,
-			Handler:      WithCORS(mux),
+			Handler:      WithCORS(rateLimiter.Middleware(mux)),
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 15 * time.Second,
 			IdleTimeout:  60 * time.Second,
 		},
+		rateLimiter: rateLimiter,
 	}
 }
 
@@ -42,6 +47,7 @@ func (s *Server) Start() error {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	log.Println("Shutting down HTTP server...")
+	s.rateLimiter.Stop()
 	return s.httpServer.Shutdown(ctx)
 }
 
